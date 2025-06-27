@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum CompmnayApproval {
+  APPROVED
+  REJECTED
+  PENDING
+}
+
+model Company {
+  id           String           @id @default(uuid())
+  name         String
+  company_ID   String
+  email        String           @unique
+  address      String?
+  image        String? // Store image URL or file path
+  password     String
+  mobileNumber String
+  status       CompanyStatus    @default(ACTIVE)
+  isApproved   CompmnayApproval @default(PENDING)
+  device_token String?  
+  device_type  String? 
+  createdAt    DateTime         @default(now())
+  deletedAt    DateTime? 
+  users    User[]
+}
+
+enum Role { 
+  SUPER_ADMIN
+  SUB_ADMIN
+  PROJECT_MANAGER
+  COMPETENT_PERSON
+  TRADESMAN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  DELETED
+}
+
+model User {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  mobileNumber   String?      
+  dob            DateTime?   
+  password       String
+  jobId          String?     
+  idProofImage   String?     
+  photoImage     String?  
+  address        String?   
+  user_type      Role
+  status         UserStatus    @default(ACTIVE)
+  companyId      String?
+  company        Company? @relation(fields: [companyId], references: [id])
+  device_token   String?
+  device_type    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+}
+
+

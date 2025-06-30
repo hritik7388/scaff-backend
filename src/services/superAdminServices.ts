@@ -6,8 +6,7 @@ import {v4 as uuidv4} from "uuid";
 
 export class superAdminServices {
     async loginSuperAdminServices(data: any) {
-        try { 
-
+        try {
             const userData = await prisma.user.findUnique({
                 where: {email: data.email},
             });
@@ -25,8 +24,6 @@ export class superAdminServices {
             if (userData.user_type !== "SUPER_ADMIN") {
                 throw new CustomError("Unauthorized", 401, "Unauthorized");
             }
-
-     
 
             const jwtPayload = {
                 login_id: userData.email,
@@ -54,6 +51,72 @@ export class superAdminServices {
             throw error instanceof CustomError
                 ? error
                 : new CustomError("Failed to login super admin", 500, error.message);
+        }
+    }
+
+    async adminDashboard(id: string) {
+        try {
+            // Total companies excluding deleted ones
+            const totalCompanies = await prisma.company.count({
+                where: {
+                    status: {not: "DELETED"},
+                },
+            });
+
+            const approvedCount = await prisma.company.count({
+                where: {
+                    isApproved: "APPROVED",
+                    status: {not: "DELETED"},
+                },
+            });
+
+            const activeCount = await prisma.company.count({
+                where: {
+                    status: "ACTIVE",
+                },
+            });
+
+            const blockCount = await prisma.company.count({
+                where: {
+                    status: "BLOCKED",
+                },
+            });
+
+            // Deleted companies counted separately
+            const deletedCount = await prisma.company.count({
+                where: {
+                    status: "DELETED",
+                },
+            });
+
+            const pendingCount = await prisma.company.count({
+                where: {
+                    isApproved: "PENDING",
+                    status: {not: "DELETED"},
+                },
+            });
+
+            const rejectedCount = await prisma.company.count({
+                where: {
+                    isApproved: "REJECTED",
+                    status: {not: "DELETED"},
+                },
+            });
+
+            return {
+                message: "Admin dashboard data fetched successfully",
+                totalCompanies, // Excludes deleted
+                approvedCompanies: approvedCount,
+                activeCompanies: activeCount,
+                blockedCompanies: blockCount,
+                deletedCompanies: deletedCount,
+                pendingCompanies: pendingCount,
+                rejectedCompanies: rejectedCount,
+            };
+        } catch (error: any) {
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to fetch admin dashboard", 500, error.message);
         }
     }
 }

@@ -34,6 +34,7 @@ export class CompanyServices {
                     company_ID: data.company_ID,
                     mobileNumber: data.mobileNumber,
                     isApproved: "PENDING",
+                    user_type: "COMPANY",
                 },
             });
 
@@ -45,17 +46,6 @@ export class CompanyServices {
             if (existingUser) {
                 throw new CustomError("User with the provided email already exists", 400, "User already exists");
             }
-
-            const newUser = await prisma.user.create({
-                data: {
-                    uuid: newCompany.uuid,
-                    name: data.name,
-                    email: data.email,
-                    password: hasPassword,
-                    user_type: "COMPANY",
-                    companyId: newCompany.id,
-                },
-            });
 
             return {
                 message: "Company registered successfully",
@@ -74,29 +64,39 @@ export class CompanyServices {
 
     async loginCompanyServices(data: any) {
         try {
-            const userData = await prisma.user.findUnique({
-                where: {email: data.email},
+            const companyData = await prisma.company.findUnique({
+                where: {email: data.email, isDeleted: false, status: "ACTIVE"},
             });
 
-            if (!userData) {
+            if (!companyData) {
                 throw new CustomError("User not found", 404, "User not found");
             }
 
-            const isPasswordValid = userData.password ? await bcrypt.compare(data.password, userData.password) : false;
+            const isPasswordValid = companyData.password && (await bcrypt.compare(data.password, companyData.password));
 
+            console.log("hasPisPasswordValidassword====================>>>>", isPasswordValid);
             if (!isPasswordValid) {
                 throw new CustomError("Invalid password", 401, "Invalid password");
             }
 
-            if (userData.user_type !== "SUB_ADMIN") {
+            if (companyData.user_type !== "COMPANY") {
                 throw new CustomError("Unauthorized", 401, "Unauthorized");
+            }
+            if (companyData.id) {
+                const company = await prisma.company.findUnique({
+                    where: {id: companyData.id},
+                    select: {isApproved: true},
+                });
+                if (!company || company.isApproved !== "APPROVED") {
+                    throw new CustomError("Company not approved", 403, "Your company is not approved yet");
+                }
             }
 
             const jwtPayload = {
-                login_id: userData.email,
-                id: userData.id.toString(),
-                uuid: userData.uuid,
-                user_type: userData.user_type,
+                login_id: companyData.email,
+                id: companyData.id.toString(),
+                uuid: companyData.uuid,
+                user_type: companyData.user_type,
             };
 
             const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
@@ -104,18 +104,16 @@ export class CompanyServices {
             });
 
             const user = {
-                id: userData.id.toString(),
-                uuid: userData.uuid,
-                name: userData.name,
-                email: userData.email,
-                user_type: userData.user_type,
-                companyId: userData.companyId?.toString() ?? null, // in case companyId is BigInt
+                id: companyData.id.toString(),
+                uuid: companyData.uuid,
+                name: companyData.name,
+                email: companyData.email,
+                user_type: companyData.user_type,
+                companyId: companyData.id?.toString() ?? null, // in case companyId is BigInt
             };
-            await prisma.user.update({
-                where: {email: data.email},
-                data: {
-                    lastLogin: new Date(),
-                },
+            await prisma.company.update({
+                where: {id: companyData.id},
+                data: {lastLogin: new Date()},
             });
 
             return {
@@ -141,6 +139,8 @@ export class CompanyServices {
             const companyData = await prisma.company.findUnique({
                 where: {
                     id: data.id,
+                    isDeleted: false,
+                    status: "ACTIVE",
                 },
             });
             if (!companyData) {
@@ -162,7 +162,7 @@ export class CompanyServices {
                     "Conflict"
                 );
             }
-
+            const hasPassword = bcrypt.hashSync(data.password, 10);
             const updatedComapny = await prisma.company.update({
                 where: {
                     id: companyData.id,
@@ -172,7 +172,7 @@ export class CompanyServices {
                     email: data.email,
                     address: data.address,
                     image: data.image,
-                    password: data.password,
+                    password: hasPassword,
                     mobileNumber: data.mobileNumber,
                 },
             });
@@ -266,13 +266,14 @@ export class CompanyServices {
                 throw new CustomError("USER not found or not a super admin", 404, "Not Found");
             }
             const companyData = await prisma.company.findUnique({
-                where: {id: data.id},
+                where: {id: data.id, isDeleted: false, status: "ACTIVE"},
             });
             if (!companyData) {
                 throw new CustomError("Company not found", 404, "Not found");
             }
-            if (companyData.isApproved !== "PENDING") {
-                throw new CustomError("Company request already approved or rejected", 400, "Bad Request");
+
+            if (companyData.isApproved === "APPROVED") {
+                throw new CustomError("Company request already approved", 400, "Already approved");
             }
             const updatedCompany = await prisma.company.update({
                 where: {id: data.id},
@@ -285,6 +286,7 @@ export class CompanyServices {
                 message: "Company request approved successfully",
                 company: {
                     ...companyData,
+                    ...updatedCompany,
                     id: companyData.id.toString(),
                 },
             };
@@ -305,13 +307,14 @@ export class CompanyServices {
                 throw new CustomError("USER not found or not a super admin", 404, "Not Found");
             }
             const companyData = await prisma.company.findUnique({
-                where: {id: data.id},
+                where: {id: data.id, isDeleted: false, status: "ACTIVE"},
             });
             if (!companyData) {
                 throw new CustomError("Company not found", 404, "Not found");
             }
-            if (companyData.isApproved !== "PENDING") {
-                throw new CustomError("Company request already approved or rejected", 400, "Bad Request");
+
+            if (companyData.isApproved === "REJECTED") {
+                throw new CustomError("Company request already rejected", 400, "Already rejected");
             }
             const updatedCompany = await prisma.company.update({
                 where: {id: companyData.id},
@@ -407,7 +410,7 @@ export class CompanyServices {
             if (!userData || userData.user_type !== "SUPER_ADMIN") {
                 throw new CustomError("USER not found or not a super admin", 404, "Not Found");
             }
-            // Check if company with same email exists
+
             const companyData = await prisma.company.findUnique({
                 where: {
                     email: data.email,
@@ -417,15 +420,12 @@ export class CompanyServices {
             });
 
             if (companyData) {
-                throw new CustomError("Company already exists", 400, "Company with the provided email already exists");
+                throw new CustomError("Company with the provided email already exists", 400, "Company already exists");
             }
 
             if (data.password !== data.confirmPassword) {
-                throw new CustomError("Password mismatch", 400, "Password and confirm password do not match");
+                throw new CustomError("Password and confirm password do not match", 400, "Password mismatch");
             }
-            const companyID = generateCMP_ID();
-
-            // add new company
             const hasPassword = bcrypt.hashSync(data.password, 10);
             const newCompany = await prisma.company.create({
                 data: {
@@ -434,32 +434,32 @@ export class CompanyServices {
                     email: data.email,
                     address: data.address,
                     image: data.image,
-                    password: data.password,
-                    company_ID: companyID,
-                    mobileNumber: data.mobileNumber,
-                    isApproved: "APPROVED",
-                },
-            });
-            const newUser = await prisma.user.create({
-                data: {
-                    uuid: newCompany.uuid,
-                    name: data.name,
-                    email: data.email,
                     password: hasPassword,
-                    user_type: "SUB_ADMIN",
-                    companyId: newCompany.id,
+                    company_ID: data.company_ID,
+                    mobileNumber: data.mobileNumber,
+                    isApproved: "PENDING",
+                    user_type: "COMPANY",
                 },
             });
- 
+
+            // Add this check
+            const existingUser = await prisma.user.findUnique({
+                where: {email: data.email},
+            });
+
+            if (existingUser) {
+                throw new CustomError("User with the provided email already exists", 400, "User already exists");
+            }
 
             return {
                 message: "Company registered successfully",
                 company: {
                     ...newCompany,
-                    id: newCompany.id.toString(),
+                    id: newCompany.id.toString(), // convert BigInt to string
                 },
             };
         } catch (error: any) {
+            console.log("error===================>>>", error);
             throw error instanceof CustomError
                 ? error
                 : new CustomError("Failed to register company", 500, error.message);
@@ -478,10 +478,16 @@ export class CompanyServices {
             const companyData = await prisma.company.findUnique({
                 where: {
                     id: data.id,
+                    isDeleted: false,
+                    status: "ACTIVE",
                 },
             });
             if (!companyData) {
                 throw new CustomError("Company not found", 404, "Not found");
+            }
+
+            if (companyData.status === "BLOCKED") {
+                throw new CustomError("Company request already blocked", 400, "Already blocked");
             }
 
             const updateCompany = await prisma.company.update({
@@ -491,7 +497,7 @@ export class CompanyServices {
                 },
             });
             return {
-                message: "Company inactive successfully",
+                message: "Company BLOCKED successfully",
                 company: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),
@@ -516,12 +522,16 @@ export class CompanyServices {
             const companyData = await prisma.company.findUnique({
                 where: {
                     id: data.id,
+                    isDeleted: false,
+                    status: "BLOCKED",
                 },
             });
             if (!companyData) {
                 throw new CustomError("Company not found", 404, "Not found");
             }
-
+            if (companyData.status === "ACTIVE") {
+                throw new CustomError("Company request already unblocked", 400, "Already unblocked");
+            }
             const updateCompany = await prisma.company.update({
                 where: {id: companyData.id},
                 data: {
@@ -554,20 +564,24 @@ export class CompanyServices {
             const companyData = await prisma.company.findUnique({
                 where: {
                     id: data.id,
+                    isDeleted: false,
                 },
             });
             if (!companyData) {
-                throw new CustomError("Company not found", 404, "Not found");
+                throw new CustomError("Company already deleted", 404, "Not found");
             }
-
+            if (companyData.status === "DELETED") {
+                throw new CustomError("Company request already deleted", 400, "Already deleted");
+            }
             const updateCompany = await prisma.company.update({
                 where: {id: companyData.id},
                 data: {
                     status: "DELETED",
+                    isDeleted: true,
                 },
             });
             return {
-                message: "Company activate successfully",
+                message: "Company deleted successfully",
                 company: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),

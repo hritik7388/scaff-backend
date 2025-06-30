@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanyServices = void 0;
 const prismaClient_1 = __importDefault(require("../config/prismaClient"));
 const customError_1 = require("../types/customError");
-const utils_1 = require("../helpers/utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uuid_1 = require("uuid");
@@ -48,6 +47,7 @@ class CompanyServices {
                         company_ID: data.company_ID,
                         mobileNumber: data.mobileNumber,
                         isApproved: "PENDING",
+                        user_type: "COMPANY",
                     },
                 });
                 // Add this check
@@ -57,16 +57,6 @@ class CompanyServices {
                 if (existingUser) {
                     throw new customError_1.CustomError("User with the provided email already exists", 400, "User already exists");
                 }
-                const newUser = yield prismaClient_1.default.user.create({
-                    data: {
-                        uuid: newCompany.uuid,
-                        name: data.name,
-                        email: data.email,
-                        password: hasPassword,
-                        user_type: "COMPANY",
-                        companyId: newCompany.id,
-                    },
-                });
                 return {
                     message: "Company registered successfully",
                     company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
@@ -84,41 +74,49 @@ class CompanyServices {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             try {
-                const userData = yield prismaClient_1.default.user.findUnique({
-                    where: { email: data.email },
+                const companyData = yield prismaClient_1.default.company.findUnique({
+                    where: { email: data.email, isDeleted: false, status: "ACTIVE" },
                 });
-                if (!userData) {
+                if (!companyData) {
                     throw new customError_1.CustomError("User not found", 404, "User not found");
                 }
-                const isPasswordValid = userData.password ? yield bcryptjs_1.default.compare(data.password, userData.password) : false;
+                const isPasswordValid = companyData.password && (yield bcryptjs_1.default.compare(data.password, companyData.password));
+                console.log("hasPisPasswordValidassword====================>>>>", isPasswordValid);
                 if (!isPasswordValid) {
                     throw new customError_1.CustomError("Invalid password", 401, "Invalid password");
                 }
-                if (userData.user_type !== "SUB_ADMIN") {
+                if (companyData.user_type !== "COMPANY") {
                     throw new customError_1.CustomError("Unauthorized", 401, "Unauthorized");
                 }
+                if (companyData.id) {
+                    const company = yield prismaClient_1.default.company.findUnique({
+                        where: { id: companyData.id },
+                        select: { isApproved: true },
+                    });
+                    if (!company || company.isApproved !== "APPROVED") {
+                        throw new customError_1.CustomError("Company not approved", 403, "Your company is not approved yet");
+                    }
+                }
                 const jwtPayload = {
-                    login_id: userData.email,
-                    id: userData.id.toString(),
-                    uuid: userData.uuid,
-                    user_type: userData.user_type,
+                    login_id: companyData.email,
+                    id: companyData.id.toString(),
+                    uuid: companyData.uuid,
+                    user_type: companyData.user_type,
                 };
                 const token = jsonwebtoken_1.default.sign(jwtPayload, process.env.JWT_SECRET, {
                     expiresIn: "30d",
                 });
                 const user = {
-                    id: userData.id.toString(),
-                    uuid: userData.uuid,
-                    name: userData.name,
-                    email: userData.email,
-                    user_type: userData.user_type,
-                    companyId: (_b = (_a = userData.companyId) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : null, // in case companyId is BigInt
+                    id: companyData.id.toString(),
+                    uuid: companyData.uuid,
+                    name: companyData.name,
+                    email: companyData.email,
+                    user_type: companyData.user_type,
+                    companyId: (_b = (_a = companyData.id) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : null, // in case companyId is BigInt
                 };
-                yield prismaClient_1.default.user.update({
-                    where: { email: data.email },
-                    data: {
-                        lastLogin: new Date(),
-                    },
+                yield prismaClient_1.default.company.update({
+                    where: { id: companyData.id },
+                    data: { lastLogin: new Date() },
                 });
                 return {
                     message: "Login successful",
@@ -144,6 +142,8 @@ class CompanyServices {
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         id: data.id,
+                        isDeleted: false,
+                        status: "ACTIVE",
                     },
                 });
                 if (!companyData) {
@@ -160,6 +160,7 @@ class CompanyServices {
                 if (existingCompany) {
                     throw new customError_1.CustomError("Company with the provided email, name or mobile number already exists", 409, "Conflict");
                 }
+                const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const updatedComapny = yield prismaClient_1.default.company.update({
                     where: {
                         id: companyData.id,
@@ -169,7 +170,7 @@ class CompanyServices {
                         email: data.email,
                         address: data.address,
                         image: data.image,
-                        password: data.password,
+                        password: hasPassword,
                         mobileNumber: data.mobileNumber,
                     },
                 });
@@ -255,13 +256,13 @@ class CompanyServices {
                     throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
                 }
                 const companyData = yield prismaClient_1.default.company.findUnique({
-                    where: { id: data.id },
+                    where: { id: data.id, isDeleted: false, status: "ACTIVE" },
                 });
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
                 }
-                if (companyData.isApproved !== "PENDING") {
-                    throw new customError_1.CustomError("Company request already approved or rejected", 400, "Bad Request");
+                if (companyData.isApproved === "APPROVED") {
+                    throw new customError_1.CustomError("Company request already approved", 400, "Already approved");
                 }
                 const updatedCompany = yield prismaClient_1.default.company.update({
                     where: { id: data.id },
@@ -272,7 +273,7 @@ class CompanyServices {
                 // await sendMailApproval(companyData.email, companyData.password);
                 return {
                     message: "Company request approved successfully",
-                    company: Object.assign(Object.assign({}, companyData), { id: companyData.id.toString() }),
+                    company: Object.assign(Object.assign(Object.assign({}, companyData), updatedCompany), { id: companyData.id.toString() }),
                 };
             }
             catch (error) {
@@ -293,13 +294,13 @@ class CompanyServices {
                     throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
                 }
                 const companyData = yield prismaClient_1.default.company.findUnique({
-                    where: { id: data.id },
+                    where: { id: data.id, isDeleted: false, status: "ACTIVE" },
                 });
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
                 }
-                if (companyData.isApproved !== "PENDING") {
-                    throw new customError_1.CustomError("Company request already approved or rejected", 400, "Bad Request");
+                if (companyData.isApproved === "REJECTED") {
+                    throw new customError_1.CustomError("Company request already rejected", 400, "Already rejected");
                 }
                 const updatedCompany = yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
@@ -385,7 +386,6 @@ class CompanyServices {
                 if (!userData || userData.user_type !== "SUPER_ADMIN") {
                     throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
                 }
-                // Check if company with same email exists
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         email: data.email,
@@ -394,13 +394,11 @@ class CompanyServices {
                     },
                 });
                 if (companyData) {
-                    throw new customError_1.CustomError("Company already exists", 400, "Company with the provided email already exists");
+                    throw new customError_1.CustomError("Company with the provided email already exists", 400, "Company already exists");
                 }
                 if (data.password !== data.confirmPassword) {
-                    throw new customError_1.CustomError("Password mismatch", 400, "Password and confirm password do not match");
+                    throw new customError_1.CustomError("Password and confirm password do not match", 400, "Password mismatch");
                 }
-                const companyID = (0, utils_1.generateCMP_ID)();
-                // add new company
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const newCompany = yield prismaClient_1.default.company.create({
                     data: {
@@ -409,28 +407,27 @@ class CompanyServices {
                         email: data.email,
                         address: data.address,
                         image: data.image,
-                        password: data.password,
-                        company_ID: companyID,
-                        mobileNumber: data.mobileNumber,
-                        isApproved: "APPROVED",
-                    },
-                });
-                const newUser = yield prismaClient_1.default.user.create({
-                    data: {
-                        uuid: newCompany.uuid,
-                        name: data.name,
-                        email: data.email,
                         password: hasPassword,
-                        user_type: "SUB_ADMIN",
-                        companyId: newCompany.id,
+                        company_ID: data.company_ID,
+                        mobileNumber: data.mobileNumber,
+                        isApproved: "PENDING",
+                        user_type: "COMPANY",
                     },
                 });
+                // Add this check
+                const existingUser = yield prismaClient_1.default.user.findUnique({
+                    where: { email: data.email },
+                });
+                if (existingUser) {
+                    throw new customError_1.CustomError("User with the provided email already exists", 400, "User already exists");
+                }
                 return {
                     message: "Company registered successfully",
                     company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
                 };
             }
             catch (error) {
+                console.log("error===================>>>", error);
                 throw error instanceof customError_1.CustomError
                     ? error
                     : new customError_1.CustomError("Failed to register company", 500, error.message);
@@ -449,10 +446,15 @@ class CompanyServices {
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         id: data.id,
+                        isDeleted: false,
+                        status: "ACTIVE",
                     },
                 });
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
+                }
+                if (companyData.status === "BLOCKED") {
+                    throw new customError_1.CustomError("Company request already blocked", 400, "Already blocked");
                 }
                 const updateCompany = yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
@@ -461,7 +463,7 @@ class CompanyServices {
                     },
                 });
                 return {
-                    message: "Company inactive successfully",
+                    message: "Company BLOCKED successfully",
                     company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
                 };
             }
@@ -484,10 +486,15 @@ class CompanyServices {
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         id: data.id,
+                        isDeleted: false,
+                        status: "BLOCKED",
                     },
                 });
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
+                }
+                if (companyData.status === "ACTIVE") {
+                    throw new customError_1.CustomError("Company request already unblocked", 400, "Already unblocked");
                 }
                 const updateCompany = yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
@@ -519,19 +526,24 @@ class CompanyServices {
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         id: data.id,
+                        isDeleted: false,
                     },
                 });
                 if (!companyData) {
-                    throw new customError_1.CustomError("Company not found", 404, "Not found");
+                    throw new customError_1.CustomError("Company already deleted", 404, "Not found");
+                }
+                if (companyData.status === "DELETED") {
+                    throw new customError_1.CustomError("Company request already deleted", 400, "Already deleted");
                 }
                 const updateCompany = yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
                     data: {
                         status: "DELETED",
+                        isDeleted: true,
                     },
                 });
                 return {
-                    message: "Company activate successfully",
+                    message: "Company deleted successfully",
                     company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
                 };
             }

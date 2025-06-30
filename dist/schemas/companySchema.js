@@ -48,6 +48,7 @@ exports.addNewCompanySchema = zod_1.z.object({
     email: zod_1.z.string().email("Invalid email format").min(1, "Email is required"),
     image: zod_1.z.string().min(1, "Image URL is required"),
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
+    company_ID: zod_1.z.string(),
     confirmPassword: zod_1.z.string().min(8, "Confirm Password must be at least 8 characters long"),
     mobileNumber: zod_1.z
         .string()

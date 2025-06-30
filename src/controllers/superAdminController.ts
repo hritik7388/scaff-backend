@@ -14,6 +14,14 @@ export class superAdminController {
       res.status(400).json({ error: (err as Error).message });
     }
   }
-
+  async dashboardData(req: AuthenticatedRequest, res: Response) {
+    try {
+      const id = String(req.user?.id!);
+      const data = await superAdmin.adminDashboard(id);
+      res.status(200).json(data);
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+    }
+  }
  
 }

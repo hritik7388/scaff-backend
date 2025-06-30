@@ -51,9 +51,13 @@ export const addNewCompanySchema = z.object({
     email: z.string().email("Invalid email format").min(1, "Email is required"),
     image: z.string().min(1, "Image URL is required"),
     password: z.string().min(8, "Password must be at least 8 characters long"),
+
+    company_ID: z.string(),
     confirmPassword: z.string().min(8, "Confirm Password must be at least 8 characters long"),
     mobileNumber: z
+    
     .string()
+    
     .min(10, "Phone number mustbe at least 10 characters long")
     .max(15, "Phone number cannot exceed 15 characters"),
     address: z.string().min(1, "Address is required"), 

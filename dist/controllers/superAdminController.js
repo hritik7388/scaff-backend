@@ -26,5 +26,18 @@ class superAdminController {
             }
         });
     }
+    dashboardData(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const id = String((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
+                const data = yield superAdmin.adminDashboard(id);
+                res.status(200).json(data);
+            }
+            catch (err) {
+                res.status(400).json({ error: err.message });
+            }
+        });
+    }
 }
 exports.superAdminController = superAdminController;

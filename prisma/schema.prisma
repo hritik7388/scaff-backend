@@ -46,6 +46,8 @@ model Company {
   image        String?  
   password     String
   mobileNumber String
+  user_type         Role
+   lastLogin         DateTime? 
   status       CompanyStatus    @default(ACTIVE)
   isDeleted    Boolean          @default(false)
   isApproved   CompmnayApproval @default(PENDING) 

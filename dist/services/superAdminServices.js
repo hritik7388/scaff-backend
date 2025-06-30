@@ -70,6 +70,67 @@ class superAdminServices {
             }
         });
     }
+    adminDashboard(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Total companies excluding deleted ones
+                const totalCompanies = yield prismaClient_1.default.company.count({
+                    where: {
+                        status: { not: "DELETED" }
+                    }
+                });
+                const approvedCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        isApproved: "APPROVED",
+                        status: { not: "DELETED" }
+                    },
+                });
+                const activeCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        status: "ACTIVE"
+                    },
+                });
+                const blockCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        status: "BLOCKED"
+                    },
+                });
+                // Deleted companies counted separately
+                const deletedCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        status: "DELETED"
+                    },
+                });
+                const pendingCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        isApproved: "PENDING",
+                        status: { not: "DELETED" }
+                    },
+                });
+                const rejectedCount = yield prismaClient_1.default.company.count({
+                    where: {
+                        isApproved: "REJECTED",
+                        status: { not: "DELETED" }
+                    },
+                });
+                return {
+                    message: "Admin dashboard data fetched successfully",
+                    totalCompanies, // Excludes deleted
+                    approvedCompanies: approvedCount,
+                    activeCompanies: activeCount,
+                    blockedCompanies: blockCount,
+                    deletedCompanies: deletedCount,
+                    pendingCompanies: pendingCount,
+                    rejectedCompanies: rejectedCount,
+                };
+            }
+            catch (error) {
+                throw error instanceof customError_1.CustomError
+                    ? error
+                    : new customError_1.CustomError("Failed to fetch admin dashboard", 500, error.message);
+            }
+        });
+    }
 }
 exports.superAdminServices = superAdminServices;
 (() => __awaiter(void 0, void 0, void 0, function* () {

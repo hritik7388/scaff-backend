@@ -3,7 +3,7 @@ import {CustomError} from "../types/customError";
 import {generateCMP_ID, sendMailApproval} from "../helpers/utils";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import {v4 as uuidv4} from "uuid";
 export class CompanyServices {
     async registerCompany(data: any) {
         try {
@@ -25,6 +25,7 @@ export class CompanyServices {
             const hasPassword = bcrypt.hashSync(data.password, 10);
             const newCompany = await prisma.company.create({
                 data: {
+                    uuid: uuidv4(),
                     name: data.name,
                     email: data.email,
                     address: data.address,
@@ -47,30 +48,14 @@ export class CompanyServices {
 
             const newUser = await prisma.user.create({
                 data: {
+                    uuid: newCompany.uuid,
                     name: data.name,
                     email: data.email,
                     password: hasPassword,
-                    user_type: "SUB_ADMIN",
+                    user_type: "COMPANY",
                     companyId: newCompany.id,
                 },
             });
-
-            if (data.deviceToken && data.deviceType) {
-                const existingDevice = await prisma.device.findFirst({
-                    where: {userId: newUser.id},
-                });
-
-                if (existingDevice) {
-                    await prisma.device.update({
-                        where: {id: existingDevice.id},
-                        data: {deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                } else {
-                    await prisma.device.create({
-                        data: {userId: newUser.id, deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                }
-            }
 
             return {
                 message: "Company registered successfully",
@@ -107,24 +92,6 @@ export class CompanyServices {
                 throw new CustomError("Unauthorized", 401, "Unauthorized");
             }
 
-            // ✅ Device token handling
-            if (data.deviceToken && data.deviceType) {
-                const existingDevice = await prisma.device.findFirst({
-                    where: {userId: userData.id},
-                });
-
-                if (existingDevice) {
-                    await prisma.device.update({
-                        where: {id: existingDevice.id},
-                        data: {deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                } else {
-                    await prisma.device.create({
-                        data: {userId: userData.id, deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                }
-            }
-
             const jwtPayload = {
                 login_id: userData.email,
                 id: userData.id.toString(),
@@ -144,6 +111,12 @@ export class CompanyServices {
                 user_type: userData.user_type,
                 companyId: userData.companyId?.toString() ?? null, // in case companyId is BigInt
             };
+            await prisma.user.update({
+                where: {email: data.email},
+                data: {
+                    lastLogin: new Date(),
+                },
+            });
 
             return {
                 message: "Login successful",
@@ -234,7 +207,7 @@ export class CompanyServices {
 
             return {
                 message: "All company details fetched successfully",
-               companies: companyData.map((company: any) => ({
+                companies: companyData.map((company: any) => ({
                     ...company,
                     id: company.id.toString(),
                 })),
@@ -271,10 +244,10 @@ export class CompanyServices {
 
             return {
                 message: "Company details fetched successfully",
-                   company: {
-                        ...companyData,
-                        id: companyData.id.toString(),
-                    },
+                company: {
+                    ...companyData,
+                    id: companyData.id.toString(),
+                },
             };
         } catch (error: any) {
             console.error("getCompanyById error:", error);
@@ -284,7 +257,7 @@ export class CompanyServices {
         }
     }
 
-        async approveCompanyRequest(id: number, data: any) {
+    async approveCompanyRequest(id: number, data: any) {
         try {
             const userData = await prisma.user.findUnique({
                 where: {id: id},
@@ -307,10 +280,10 @@ export class CompanyServices {
                     isApproved: "APPROVED",
                 },
             });
-           // await sendMailApproval(companyData.email, companyData.password);
+            // await sendMailApproval(companyData.email, companyData.password);
             return {
                 message: "Company request approved successfully",
-               company: {
+                company: {
                     ...companyData,
                     id: companyData.id.toString(),
                 },
@@ -348,7 +321,7 @@ export class CompanyServices {
             });
             return {
                 message: "Company request rejected successfully",
-               company: {
+                company: {
                     ...updatedCompany,
                     id: updatedCompany.id.toString(),
                 },
@@ -361,70 +334,70 @@ export class CompanyServices {
         }
     }
 
-async searchCompany(id: number, data: any, page = 1, limit = 10) {
-    try {
-        const userData = await prisma.user.findUnique({
-            where: { id: id },
-        });
+    async searchCompany(id: number, data: any, page = 1, limit = 10) {
+        try {
+            const userData = await prisma.user.findUnique({
+                where: {id: id},
+            });
 
-        if (!userData || userData.user_type !== "SUPER_ADMIN") {
-            throw new CustomError("USER not found or not a super admin", 404, "Not Found");
-        }
-
-        const skip = (Number(page) - 1) * Number(limit);
-        const take = Number(limit);
-
-        let whereCondition: any = {};
-
-        if (data && typeof data === "string" && data.trim() !== "") {
-            const conditions: any[] = [
-                {
-                    company_ID: data,
-                },
-                {
-                    name: {
-                        contains: data.toLowerCase(),
-                    },
-                },
-            ]; 
-            if (!isNaN(Number(data))) {
-                conditions.unshift({
-                    id: BigInt(data),
-                });
+            if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                throw new CustomError("USER not found or not a super admin", 404, "Not Found");
             }
 
-            whereCondition = {
-                OR: conditions,
+            const skip = (Number(page) - 1) * Number(limit);
+            const take = Number(limit);
+
+            let whereCondition: any = {};
+
+            if (data && typeof data === "string" && data.trim() !== "") {
+                const conditions: any[] = [
+                    {
+                        company_ID: data,
+                    },
+                    {
+                        name: {
+                            contains: data.toLowerCase(),
+                        },
+                    },
+                ];
+                if (!isNaN(Number(data))) {
+                    conditions.unshift({
+                        id: BigInt(data),
+                    });
+                }
+
+                whereCondition = {
+                    OR: conditions,
+                };
+            }
+
+            const companies = await prisma.company.findMany({
+                where: whereCondition,
+                skip,
+                take,
+            });
+
+            const totalCompanies = await prisma.company.count({
+                where: whereCondition,
+            });
+
+            return {
+                message: "Company search successful",
+                total: totalCompanies,
+                currentPage: Number(page),
+                totalPages: Math.ceil(totalCompanies / Number(limit)),
+                data: companies.map((company: any) => ({
+                    ...company,
+                    id: company.id.toString(),
+                })),
             };
+        } catch (error: any) {
+            console.error("searchCompany error:", error);
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to search company", 500, error.message);
         }
-
-        const companies = await prisma.company.findMany({
-            where: whereCondition,
-            skip,
-            take,
-        });
-
-        const totalCompanies = await prisma.company.count({
-            where: whereCondition,
-        });
-
-        return {
-            message: "Company search successful",
-            total: totalCompanies,
-            currentPage: Number(page),
-            totalPages: Math.ceil(totalCompanies / Number(limit)),
-            data: companies.map((company: any) => ({
-                ...company,
-                id: company.id.toString(),
-            })),
-        };
-    } catch (error: any) {
-        console.error("searchCompany error:", error);
-        throw error instanceof CustomError
-            ? error
-            : new CustomError("Failed to search company", 500, error.message);
     }
-}
 
     async addNewCompany(id: number, data: any) {
         try {
@@ -456,18 +429,20 @@ async searchCompany(id: number, data: any, page = 1, limit = 10) {
             const hasPassword = bcrypt.hashSync(data.password, 10);
             const newCompany = await prisma.company.create({
                 data: {
+                    uuid: uuidv4(),
                     name: data.name,
                     email: data.email,
                     address: data.address,
                     image: data.image,
                     password: data.password,
                     company_ID: companyID,
-                    mobileNumber: data.mobileNumber, 
+                    mobileNumber: data.mobileNumber,
                     isApproved: "APPROVED",
                 },
             });
-                    const newUser = await prisma.user.create({
+            const newUser = await prisma.user.create({
                 data: {
+                    uuid: newCompany.uuid,
                     name: data.name,
                     email: data.email,
                     password: hasPassword,
@@ -475,28 +450,11 @@ async searchCompany(id: number, data: any, page = 1, limit = 10) {
                     companyId: newCompany.id,
                 },
             });
-
-             if (data.deviceToken && data.deviceType) {
-                const existingDevice = await prisma.device.findFirst({
-                    where: {userId: newUser.id},
-                });
-
-                if (existingDevice) {
-                    await prisma.device.update({
-                        where: {id: existingDevice.id},
-                        data: {deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                } else {
-                    await prisma.device.create({
-                        data: {userId: newUser.id, deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                }
-            }
-
+ 
 
             return {
                 message: "Company registered successfully",
-               company: {
+                company: {
                     ...newCompany,
                     id: newCompany.id.toString(),
                 },
@@ -508,9 +466,9 @@ async searchCompany(id: number, data: any, page = 1, limit = 10) {
         }
     }
 
-    async inactiveCompany(id:number,data:any){
-        try{
-             const userData = await prisma.user.findUnique({
+    async blockCompany(id: number, data: any) {
+        try {
+            const userData = await prisma.user.findUnique({
                 where: {id: id},
             });
             if (!userData || userData.user_type !== "SUPER_ADMIN") {
@@ -519,33 +477,106 @@ async searchCompany(id: number, data: any, page = 1, limit = 10) {
 
             const companyData = await prisma.company.findUnique({
                 where: {
-                    id: data.id
-                }
-            })
-            if(!companyData){
+                    id: data.id,
+                },
+            });
+            if (!companyData) {
                 throw new CustomError("Company not found", 404, "Not found");
             }
 
             const updateCompany = await prisma.company.update({
-                where: { id: companyData.id },
+                where: {id: companyData.id},
                 data: {
-                    // Add the fields you want to update here, for example:
-                    status: "INACTIVE",
+                    status: "BLOCKED",
                 },
             });
             return {
                 message: "Company inactive successfully",
-               company: {
+                company: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),
                 },
             };
-
-        }catch(error:any){
+        } catch (error: any) {
             throw error instanceof CustomError
                 ? error
-                : new CustomError("Failed to register company", 500, error.message);
+                : new CustomError("Failed to inactivate company", 500, error.message);
         }
     }
 
+    async unblockCompany(id: number, data: any) {
+        try {
+            const userData = await prisma.user.findUnique({
+                where: {id: id},
+            });
+            if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                throw new CustomError("USER not found or not a super admin", 404, "Not Found");
+            }
+
+            const companyData = await prisma.company.findUnique({
+                where: {
+                    id: data.id,
+                },
+            });
+            if (!companyData) {
+                throw new CustomError("Company not found", 404, "Not found");
+            }
+
+            const updateCompany = await prisma.company.update({
+                where: {id: companyData.id},
+                data: {
+                    status: "ACTIVE",
+                },
+            });
+            return {
+                message: "Company activate successfully",
+                company: {
+                    ...updateCompany,
+                    id: updateCompany.id.toString(),
+                },
+            };
+        } catch (error: any) {
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to activate company", 500, error.message);
+        }
+    }
+
+    async deleteCompany(id: number, data: any) {
+        try {
+            const userData = await prisma.user.findUnique({
+                where: {id: id},
+            });
+            if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                throw new CustomError("USER not found or not a super admin", 404, "Not Found");
+            }
+
+            const companyData = await prisma.company.findUnique({
+                where: {
+                    id: data.id,
+                },
+            });
+            if (!companyData) {
+                throw new CustomError("Company not found", 404, "Not found");
+            }
+
+            const updateCompany = await prisma.company.update({
+                where: {id: companyData.id},
+                data: {
+                    status: "DELETED",
+                },
+            });
+            return {
+                message: "Company activate successfully",
+                company: {
+                    ...updateCompany,
+                    id: updateCompany.id.toString(),
+                },
+            };
+        } catch (error: any) {
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to activate company", 500, error.message);
+        }
+    }
 }

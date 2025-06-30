@@ -139,13 +139,41 @@ class CompanyControllers {
             }
         });
     }
-    inactiveCompanyBySuperAdmin(req, res) {
+    blockCompanyBySuperAdmin(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
                 const id = Number((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
                 const data = companySchema_1.companyStatus.parse(req.body);
-                const company = yield companyServiceController.inactiveCompany(id, data);
+                const company = yield companyServiceController.blockCompany(id, data);
+                res.status(201).json(company);
+            }
+            catch (err) {
+                res.status(400).json({ error: err.message });
+            }
+        });
+    }
+    unblockCompanyBySuperAdmin(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const id = Number((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
+                const data = companySchema_1.companyStatus.parse(req.body);
+                const company = yield companyServiceController.unblockCompany(id, data);
+                res.status(201).json(company);
+            }
+            catch (err) {
+                res.status(400).json({ error: err.message });
+            }
+        });
+    }
+    deleteCompanyBySuperAdmin(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const id = Number((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
+                const data = companySchema_1.companyStatus.parse(req.body);
+                const company = yield companyServiceController.deleteCompany(id, data);
                 res.status(201).json(company);
             }
             catch (err) {

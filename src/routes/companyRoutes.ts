@@ -72,10 +72,24 @@ router.get('/searchCompany', authMiddleware, companyController.searchCompany.bin
 router.post('/addNewCompanyBySuperAdmin', authMiddleware, companyController.addNewCompanyBySuperAdmin.bind(companyController));
 
 /**
- * @route   POST /api/v1/company/addNewCompanyBySuperAdmin
- * @desc    Add a new company
+ * @route   PATCH /api/v1/company/inactiveCompanyBySuperAdmin
+ * @desc    Inactive the company
  * @access  Private (Super Admin)
  */
-router.patch('/inactiveCompanyBySuperAdmin', authMiddleware, companyController.inactiveCompanyBySuperAdmin.bind(companyController));
+router.patch('/blockCompanyBySuperAdmin', authMiddleware, companyController.blockCompanyBySuperAdmin.bind(companyController));
+
+/**
+ * @route   PATCH /api/v1/company/activeCompanyBySuperAdmin
+ * @desc    Active the company
+ * @access  Private (Super Admin)
+ */
+router.patch('/unblockCompanyBySuperAdmin', authMiddleware, companyController.unblockCompanyBySuperAdmin.bind(companyController));
+
+/**
+ * @route   DELETE /api/v1/company/suspendedCompanyBySuperAdmin
+ * @desc    Suspended the company
+ * @access  Private (Super Admin)
+ */
+router.delete('/deleteCompanyBySuperAdmin', authMiddleware, companyController.deleteCompanyBySuperAdmin.bind(companyController));
 
 export default router;

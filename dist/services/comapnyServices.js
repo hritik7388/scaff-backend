@@ -18,6 +18,7 @@ const customError_1 = require("../types/customError");
 const utils_1 = require("../helpers/utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const uuid_1 = require("uuid");
 class CompanyServices {
     registerCompany(data) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -38,6 +39,7 @@ class CompanyServices {
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const newCompany = yield prismaClient_1.default.company.create({
                     data: {
+                        uuid: (0, uuid_1.v4)(),
                         name: data.name,
                         email: data.email,
                         address: data.address,
@@ -57,29 +59,14 @@ class CompanyServices {
                 }
                 const newUser = yield prismaClient_1.default.user.create({
                     data: {
+                        uuid: newCompany.uuid,
                         name: data.name,
                         email: data.email,
                         password: hasPassword,
-                        user_type: "SUB_ADMIN",
+                        user_type: "COMPANY",
                         companyId: newCompany.id,
                     },
                 });
-                if (data.deviceToken && data.deviceType) {
-                    const existingDevice = yield prismaClient_1.default.device.findFirst({
-                        where: { userId: newUser.id },
-                    });
-                    if (existingDevice) {
-                        yield prismaClient_1.default.device.update({
-                            where: { id: existingDevice.id },
-                            data: { deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                    else {
-                        yield prismaClient_1.default.device.create({
-                            data: { userId: newUser.id, deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                }
                 return {
                     message: "Company registered successfully",
                     company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
@@ -110,23 +97,6 @@ class CompanyServices {
                 if (userData.user_type !== "SUB_ADMIN") {
                     throw new customError_1.CustomError("Unauthorized", 401, "Unauthorized");
                 }
-                // ✅ Device token handling
-                if (data.deviceToken && data.deviceType) {
-                    const existingDevice = yield prismaClient_1.default.device.findFirst({
-                        where: { userId: userData.id },
-                    });
-                    if (existingDevice) {
-                        yield prismaClient_1.default.device.update({
-                            where: { id: existingDevice.id },
-                            data: { deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                    else {
-                        yield prismaClient_1.default.device.create({
-                            data: { userId: userData.id, deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                }
                 const jwtPayload = {
                     login_id: userData.email,
                     id: userData.id.toString(),
@@ -144,6 +114,12 @@ class CompanyServices {
                     user_type: userData.user_type,
                     companyId: (_b = (_a = userData.companyId) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : null, // in case companyId is BigInt
                 };
+                yield prismaClient_1.default.user.update({
+                    where: { email: data.email },
+                    data: {
+                        lastLogin: new Date(),
+                    },
+                });
                 return {
                     message: "Login successful",
                     token,
@@ -428,6 +404,7 @@ class CompanyServices {
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const newCompany = yield prismaClient_1.default.company.create({
                     data: {
+                        uuid: (0, uuid_1.v4)(),
                         name: data.name,
                         email: data.email,
                         address: data.address,
@@ -440,6 +417,7 @@ class CompanyServices {
                 });
                 const newUser = yield prismaClient_1.default.user.create({
                     data: {
+                        uuid: newCompany.uuid,
                         name: data.name,
                         email: data.email,
                         password: hasPassword,
@@ -447,22 +425,6 @@ class CompanyServices {
                         companyId: newCompany.id,
                     },
                 });
-                if (data.deviceToken && data.deviceType) {
-                    const existingDevice = yield prismaClient_1.default.device.findFirst({
-                        where: { userId: newUser.id },
-                    });
-                    if (existingDevice) {
-                        yield prismaClient_1.default.device.update({
-                            where: { id: existingDevice.id },
-                            data: { deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                    else {
-                        yield prismaClient_1.default.device.create({
-                            data: { userId: newUser.id, deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                }
                 return {
                     message: "Company registered successfully",
                     company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
@@ -475,7 +437,7 @@ class CompanyServices {
             }
         });
     }
-    inactiveCompany(id, data) {
+    blockCompany(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const userData = yield prismaClient_1.default.user.findUnique({
@@ -486,8 +448,8 @@ class CompanyServices {
                 }
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
-                        id: data.id
-                    }
+                        id: data.id,
+                    },
                 });
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
@@ -495,8 +457,7 @@ class CompanyServices {
                 const updateCompany = yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
                     data: {
-                        // Add the fields you want to update here, for example:
-                        status: "INACTIVE",
+                        status: "BLOCKED",
                     },
                 });
                 return {
@@ -507,7 +468,77 @@ class CompanyServices {
             catch (error) {
                 throw error instanceof customError_1.CustomError
                     ? error
-                    : new customError_1.CustomError("Failed to register company", 500, error.message);
+                    : new customError_1.CustomError("Failed to inactivate company", 500, error.message);
+            }
+        });
+    }
+    unblockCompany(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userData = yield prismaClient_1.default.user.findUnique({
+                    where: { id: id },
+                });
+                if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                    throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
+                }
+                const companyData = yield prismaClient_1.default.company.findUnique({
+                    where: {
+                        id: data.id,
+                    },
+                });
+                if (!companyData) {
+                    throw new customError_1.CustomError("Company not found", 404, "Not found");
+                }
+                const updateCompany = yield prismaClient_1.default.company.update({
+                    where: { id: companyData.id },
+                    data: {
+                        status: "ACTIVE",
+                    },
+                });
+                return {
+                    message: "Company activate successfully",
+                    company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
+                };
+            }
+            catch (error) {
+                throw error instanceof customError_1.CustomError
+                    ? error
+                    : new customError_1.CustomError("Failed to activate company", 500, error.message);
+            }
+        });
+    }
+    deleteCompany(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userData = yield prismaClient_1.default.user.findUnique({
+                    where: { id: id },
+                });
+                if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                    throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
+                }
+                const companyData = yield prismaClient_1.default.company.findUnique({
+                    where: {
+                        id: data.id,
+                    },
+                });
+                if (!companyData) {
+                    throw new customError_1.CustomError("Company not found", 404, "Not found");
+                }
+                const updateCompany = yield prismaClient_1.default.company.update({
+                    where: { id: companyData.id },
+                    data: {
+                        status: "DELETED",
+                    },
+                });
+                return {
+                    message: "Company activate successfully",
+                    company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
+                };
+            }
+            catch (error) {
+                throw error instanceof customError_1.CustomError
+                    ? error
+                    : new customError_1.CustomError("Failed to activate company", 500, error.message);
             }
         });
     }

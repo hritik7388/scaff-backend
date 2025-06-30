@@ -8,7 +8,7 @@ import {
     approveCompanyRequestSchema,
     rejectCompanyRequestSchema,
     addNewCompanySchema,
-    companyStatus
+    companyStatus,
 } from "../schemas/companySchema";
 import {CompanyServices} from "../services/comapnyServices";
 import {AuthenticatedRequest} from "../types/index";
@@ -69,61 +69,83 @@ export class CompanyControllers {
     }
 
     async approveCompanyrequest(req: AuthenticatedRequest, res: Response) {
-    try {
-      const id = Number(req.user?.id!);
-      const data = approveCompanyRequestSchema.parse(req.body);
-      const company = await companyServiceController.approveCompanyRequest(id, data);
+        try {
+            const id = Number(req.user?.id!);
+            const data = approveCompanyRequestSchema.parse(req.body);
+            const company = await companyServiceController.approveCompanyRequest(id, data);
 
-      res.status(200).json(company);
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+            res.status(200).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
     }
-  }
 
-  async rejectCompanyrequest(req: AuthenticatedRequest, res: Response) {
-    try {
-      const id = Number(req.user?.id!);
-      const data = rejectCompanyRequestSchema.parse(req.body);
-      const company = await companyServiceController.rejectCompanyRequest(id, data);
+    async rejectCompanyrequest(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const data = rejectCompanyRequestSchema.parse(req.body);
+            const company = await companyServiceController.rejectCompanyRequest(id, data);
 
-      res.status(200).json(company);
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+            res.status(200).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
     }
-  }
 
-  async searchCompany(req: AuthenticatedRequest, res: Response) {
-    try {
-      const id = Number(req.user?.id!);
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const data = req.query.search;
-      const searchData = await companyServiceController.searchCompany(id, data, page, limit);
-      res.status(200).json(searchData);
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+    async searchCompany(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const data = req.query.search;
+            const searchData = await companyServiceController.searchCompany(id, data, page, limit);
+            res.status(200).json(searchData);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
     }
-  }
 
-  async addNewCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
-    try {
-      const id = Number(req.user?.id!);
-      const data = addNewCompanySchema.parse(req.body);
-      const company = await companyServiceController.addNewCompany(id, data);
-      res.status(201).json(company);
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+    async addNewCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const data = addNewCompanySchema.parse(req.body);
+            const company = await companyServiceController.addNewCompany(id, data);
+            res.status(201).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
     }
-  }
 
-    async inactiveCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
-    try {
-      const id = Number(req.user?.id!);
-      const data = companyStatus.parse(req.body);
-      const company = await companyServiceController.inactiveCompany(id, data);
-      res.status(201).json(company);
-    } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+    async blockCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const data = companyStatus.parse(req.body);
+            const company = await companyServiceController.blockCompany(id, data);
+            res.status(201).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
     }
-  }
+
+    async unblockCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const data = companyStatus.parse(req.body);
+            const company = await companyServiceController.unblockCompany(id, data);
+            res.status(201).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
+    }
+
+    async deleteCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id = Number(req.user?.id!);
+            const data = companyStatus.parse(req.body);
+            const company = await companyServiceController.deleteCompany(id, data);
+            res.status(201).json(company);
+        } catch (err) {
+            res.status(400).json({error: (err as Error).message});
+        }
+    }
 }

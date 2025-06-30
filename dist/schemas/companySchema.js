@@ -9,16 +9,15 @@ exports.companyRegisterSchema = zod_1.z.object({
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
     company_ID: zod_1.z.string(),
     confirmPassword: zod_1.z.string().min(8, "Confirm Password must be at least 8 characters long"),
-    mobileNumber: zod_1.z.string().min(10, "Phone number mustbe at least 10 characters long").max(15, "Phone number cannot exceed 15 characters"),
+    mobileNumber: zod_1.z
+        .string()
+        .min(10, "Phone number mustbe at least 10 characters long")
+        .max(15, "Phone number cannot exceed 15 characters"),
     address: zod_1.z.string().min(1, "Address is required"),
-    deviceToken: zod_1.z.string().optional(),
-    deviceType: zod_1.z.string().optional(),
 });
 exports.compnayLoginSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
     password: zod_1.z.string(),
-    deviceToken: zod_1.z.string().optional(),
-    deviceType: zod_1.z.string().optional(),
 });
 exports.companyUpdateSchema = zod_1.z.object({
     id: zod_1.z.string(),
@@ -28,17 +27,21 @@ exports.companyUpdateSchema = zod_1.z.object({
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long").optional(),
     company_ID: zod_1.z.string().optional(),
     confirmPassword: zod_1.z.string().min(8, "Confirm Password must be at least 8 characters long").optional(),
-    mobileNumber: zod_1.z.string().min(10, "Phone number must be at least 10 characters long").max(15, "Phone number cannot exceed 15 characters").optional(),
+    mobileNumber: zod_1.z
+        .string()
+        .min(10, "Phone number must be at least 10 characters long")
+        .max(15, "Phone number cannot exceed 15 characters")
+        .optional(),
     address: zod_1.z.string().min(1, "Address is required").optional(),
 });
 exports.companyIdSchema = zod_1.z.object({
-    id: zod_1.z.string()
+    id: zod_1.z.string(),
 });
 exports.approveCompanyRequestSchema = zod_1.z.object({
-    id: zod_1.z.string()
+    id: zod_1.z.string(),
 });
 exports.rejectCompanyRequestSchema = zod_1.z.object({
-    id: zod_1.z.string()
+    id: zod_1.z.string(),
 });
 exports.addNewCompanySchema = zod_1.z.object({
     name: zod_1.z.string().min(1, "Company Name is required"),
@@ -46,11 +49,12 @@ exports.addNewCompanySchema = zod_1.z.object({
     image: zod_1.z.string().min(1, "Image URL is required"),
     password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
     confirmPassword: zod_1.z.string().min(8, "Confirm Password must be at least 8 characters long"),
-    mobileNumber: zod_1.z.string().min(10, "Phone number mustbe at least 10 characters long").max(15, "Phone number cannot exceed 15 characters"),
+    mobileNumber: zod_1.z
+        .string()
+        .min(10, "Phone number mustbe at least 10 characters long")
+        .max(15, "Phone number cannot exceed 15 characters"),
     address: zod_1.z.string().min(1, "Address is required"),
-    device_token: zod_1.z.string().optional(),
-    device_type: zod_1.z.string().optional(),
 });
 exports.companyStatus = zod_1.z.object({
-    id: zod_1.z.string()
+    id: zod_1.z.string(),
 });

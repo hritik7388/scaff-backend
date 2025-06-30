@@ -6,8 +6,7 @@ import {v4 as uuidv4} from "uuid";
 
 export class superAdminServices {
     async loginSuperAdminServices(data: any) {
-        try {
-            // const { email, password, deviceToken, deviceType } = data;
+        try { 
 
             const userData = await prisma.user.findUnique({
                 where: {email: data.email},
@@ -27,23 +26,7 @@ export class superAdminServices {
                 throw new CustomError("Unauthorized", 401, "Unauthorized");
             }
 
-            // ✅ Device token handling
-            if (data.deviceToken && data.deviceType) {
-                const existingDevice = await prisma.device.findFirst({
-                    where: {userId: userData.id},
-                });
-
-                if (existingDevice) {
-                    await prisma.device.update({
-                        where: {id: existingDevice.id},
-                        data: {deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                } else {
-                    await prisma.device.create({
-                        data: {userId: userData.id, deviceToken: data.deviceToken, deviceType: data.deviceType},
-                    });
-                }
-            }
+     
 
             const jwtPayload = {
                 login_id: userData.email,

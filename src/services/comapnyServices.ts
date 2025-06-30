@@ -42,6 +42,18 @@ export class CompanyServices {
             const existingUser = await prisma.user.findUnique({
                 where: {email: data.email},
             });
+         const newUser=await prisma.user.create({
+                data: {
+                    uuid: newCompany.uuid,
+                    name: data.name,
+                    email: data.email,
+                    password: newCompany.password,
+                    user_type: "COMPANY",
+                    companyId: newCompany.id, 
+                    lastLogin:newCompany.lastLogin
+                },
+            })
+
 
             if (existingUser) {
                 throw new CustomError("User with the provided email already exists", 400, "User already exists");

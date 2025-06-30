@@ -76,41 +76,41 @@ class superAdminServices {
                 // Total companies excluding deleted ones
                 const totalCompanies = yield prismaClient_1.default.company.count({
                     where: {
-                        status: { not: "DELETED" }
-                    }
+                        status: { not: "DELETED" },
+                    },
                 });
                 const approvedCount = yield prismaClient_1.default.company.count({
                     where: {
                         isApproved: "APPROVED",
-                        status: { not: "DELETED" }
+                        status: { not: "DELETED" },
                     },
                 });
                 const activeCount = yield prismaClient_1.default.company.count({
                     where: {
-                        status: "ACTIVE"
+                        status: "ACTIVE",
                     },
                 });
                 const blockCount = yield prismaClient_1.default.company.count({
                     where: {
-                        status: "BLOCKED"
+                        status: "BLOCKED",
                     },
                 });
                 // Deleted companies counted separately
                 const deletedCount = yield prismaClient_1.default.company.count({
                     where: {
-                        status: "DELETED"
+                        status: "DELETED",
                     },
                 });
                 const pendingCount = yield prismaClient_1.default.company.count({
                     where: {
                         isApproved: "PENDING",
-                        status: { not: "DELETED" }
+                        status: { not: "DELETED" },
                     },
                 });
                 const rejectedCount = yield prismaClient_1.default.company.count({
                     where: {
                         isApproved: "REJECTED",
-                        status: { not: "DELETED" }
+                        status: { not: "DELETED" },
                     },
                 });
                 return {

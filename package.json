@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-   "scripts": {
+  "scripts": {
     "prisma:generate": "prisma generate",
     "prisma:dbpull": "prisma db pull",
     "prisma:studio": "prisma studio",

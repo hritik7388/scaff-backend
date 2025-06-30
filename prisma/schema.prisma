@@ -7,35 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum CompanyStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  DELETED
+}
+
 enum CompmnayApproval {
   APPROVED
   REJECTED
   PENDING
-}
-
-model Company {
-  id           String           @id @default(uuid())
-  name         String
-  company_ID   String
-  email        String           @unique
-  address      String?
-  image        String? // Store image URL or file path
-  password     String
-  mobileNumber String
-  status       CompanyStatus    @default(ACTIVE)
-  isApproved   CompmnayApproval @default(PENDING)
-  device_token String?  
-  device_type  String? 
-  createdAt    DateTime         @default(now())
-  deletedAt    DateTime? 
-  users    User[]
 }
 
 enum Role { 
@@ -46,33 +34,49 @@ enum Role {
   TRADESMAN
 }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  BLOCKED
-  DELETED
+model Company {
+  id           BigInt           @id @default(autoincrement())
+  uuid         String           @default(uuid()) @unique
+  name         String
+  company_ID   String
+  email        String           @unique
+  address      String?
+  image        String?  
+  password     String
+  mobileNumber String
+  status       CompanyStatus    @default(ACTIVE)
+  isApproved   CompmnayApproval @default(PENDING) 
+  createdAt    DateTime         @default(now()) 
+
+  users        User[] 
 }
 
 model User {
-  id             String   @id @default(uuid())
-  name           String
-  email          String   @unique
-  mobileNumber   String?      
-  dob            DateTime?   
-  password       String
-  jobId          String?     
-  idProofImage   String?     
-  photoImage     String?  
-  address        String?   
-  user_type      Role
-  status         UserStatus    @default(ACTIVE)
-  companyId      String?
-  company        Company? @relation(fields: [companyId], references: [id])
-  device_token   String?
-  device_type    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                BigInt   @id @default(autoincrement())
+  uuid              String   @default(uuid()) @unique
+  name              String
+  email             String   @unique  
+  password          String
+  jobId             String?   
+  user_type         Role
+  status            UserStatus    @default(ACTIVE)
+  companyId         BigInt?
+  company           Company? @relation(fields: [companyId], references: [id]) 
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
+  devices           device[] 
 }
 
+model device {
+  id          BigInt   @id @default(autoincrement())
+  uuid        String   @default(uuid()) @unique
+  userId      BigInt
+  deviceToken String?
+  deviceType  String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  user        User     @relation(fields: [userId], references: [id])
+}
+ 

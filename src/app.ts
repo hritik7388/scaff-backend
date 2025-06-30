@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import cors from 'cors';
 import morgan from 'morgan';
-// import routes from './routes/routes';
+import routes from './routes/routes';
 import { errorMiddleware } from './middlewares/errorMiddleware';
 import { Server } from 'socket.io';
 import http from 'http';
@@ -21,7 +21,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 app.set('io', io);
-// app.use('/api', routes);
+app.use('/api', routes);
 
 app.use(errorMiddleware);
 

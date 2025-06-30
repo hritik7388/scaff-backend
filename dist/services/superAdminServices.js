@@ -33,7 +33,6 @@ class superAdminServices {
     loginSuperAdminServices(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // const { email, password, deviceToken, deviceType } = data;
                 const userData = yield prismaClient_1.default.user.findUnique({
                     where: { email: data.email },
                 });
@@ -46,23 +45,6 @@ class superAdminServices {
                 }
                 if (userData.user_type !== "SUPER_ADMIN") {
                     throw new customError_1.CustomError("Unauthorized", 401, "Unauthorized");
-                }
-                // ✅ Device token handling
-                if (data.deviceToken && data.deviceType) {
-                    const existingDevice = yield prismaClient_1.default.device.findFirst({
-                        where: { userId: userData.id },
-                    });
-                    if (existingDevice) {
-                        yield prismaClient_1.default.device.update({
-                            where: { id: existingDevice.id },
-                            data: { deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
-                    else {
-                        yield prismaClient_1.default.device.create({
-                            data: { userId: userData.id, deviceToken: data.deviceToken, deviceType: data.deviceType },
-                        });
-                    }
                 }
                 const jwtPayload = {
                     login_id: userData.email,

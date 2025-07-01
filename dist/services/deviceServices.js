@@ -18,8 +18,6 @@ const customError_1 = require("../types/customError");
 class DeviceServices {
     updateDeviceToken(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("companyId========================>>>>", id);
-            console.log("user_type========================>>>>", data.user_type);
             try {
                 let user;
                 if (data.user_type === "COMPANY") {
@@ -30,7 +28,6 @@ class DeviceServices {
                             user_type: "COMPANY",
                         },
                     });
-                    console.log("user======================>>>>>", user);
                 }
                 else {
                     user = yield prismaClient_1.default.user.findFirst({
@@ -40,7 +37,6 @@ class DeviceServices {
                             user_type: data.user_type,
                         },
                     });
-                    console.log("user2==========================>>>>>", user);
                 }
                 if (!user) {
                     throw new customError_1.CustomError("User not found", 404);
@@ -75,7 +71,6 @@ class DeviceServices {
                 return Object.assign(Object.assign({}, device), { id: device.id.toString(), userId: device.userId.toString() });
             }
             catch (error) {
-                console.log("error===================>>>", error);
                 throw error instanceof customError_1.CustomError
                     ? error
                     : new customError_1.CustomError("Failed to update device token", 500, error.message);

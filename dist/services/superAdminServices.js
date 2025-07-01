@@ -154,7 +154,7 @@ exports.superAdminServices = superAdminServices;
                     password: hashedPassword,
                     user_type: "SUPER_ADMIN",
                     name: "Super Admin",
-                    mobileNumber: "7388503329", // Provide a default or valid mobile number
+                    mobileNumber: "7388503329",
                 },
             });
             console.log("✅ Default superadmin created successfully.");

@@ -444,7 +444,7 @@ class CompanyServices {
                         user_type: "COMPANY",
                         companyId: newCompany.id,
                         lastLogin: newCompany.lastLogin,
-                        mobileNumber: newCompany.mobileNumber
+                        mobileNumber: newCompany.mobileNumber,
                     },
                 });
                 if (existingUser) {
@@ -480,7 +480,7 @@ class CompanyServices {
                     },
                 });
                 if (!companyData) {
-                    throw new customError_1.CustomError("Company not found", 404, "Not found");
+                    throw new customError_1.CustomError("Company not found or already blocked", 404, "Not found");
                 }
                 if (companyData.status === "BLOCKED") {
                     throw new customError_1.CustomError("Company request already blocked", 400, "Already blocked");
@@ -528,7 +528,7 @@ class CompanyServices {
                     },
                 });
                 if (!companyData) {
-                    throw new customError_1.CustomError("Company not found", 404, "Not found");
+                    throw new customError_1.CustomError("Company not found or already active", 404, "Not found");
                 }
                 if (companyData.status === "ACTIVE") {
                     throw new customError_1.CustomError("Company request already unblocked", 400, "Already unblocked");

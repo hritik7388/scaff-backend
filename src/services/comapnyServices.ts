@@ -36,7 +36,7 @@ export class CompanyServices {
                     isApproved: "PENDING",
                     user_type: "COMPANY",
                 },
-            }); 
+            });
             const existingUser = await prisma.user.findUnique({
                 where: {email: data.email},
             });
@@ -47,9 +47,9 @@ export class CompanyServices {
                     email: data.email,
                     password: newCompany.password,
                     user_type: "COMPANY",
-                    companyId: newCompany.id,                    
+                    companyId: newCompany.id,
                     lastLogin: newCompany.lastLogin,
-                     mobileNumber: newCompany.mobileNumber,
+                    mobileNumber: newCompany.mobileNumber,
                 },
             });
 
@@ -61,7 +61,7 @@ export class CompanyServices {
                 message: "Company registered successfully",
                 company: {
                     ...newCompany,
-                    id: newCompany.id.toString(),  
+                    id: newCompany.id.toString(),
                 },
             };
         } catch (error: any) {
@@ -119,7 +119,7 @@ export class CompanyServices {
                 name: companyData.name,
                 email: companyData.email,
                 user_type: companyData.user_type,
-                companyId: companyData.id?.toString() ?? null,  
+                companyId: companyData.id?.toString() ?? null,
             };
             await prisma.company.update({
                 where: {id: companyData.id},
@@ -196,7 +196,7 @@ export class CompanyServices {
                 message: "Company details updated successfully",
                 company: {
                     ...updatedComapny,
-                    id: updatedComapny.id.toString(), 
+                    id: updatedComapny.id.toString(),
                 },
             };
         } catch (error: any) {
@@ -453,7 +453,7 @@ export class CompanyServices {
                     password: hasPassword,
                     company_ID: data.company_ID,
                     mobileNumber: data.mobileNumber,
-                    isApproved: "PENDING",
+                    isApproved: "APPROVED",
                     user_type: "COMPANY",
                 },
             });
@@ -471,7 +471,7 @@ export class CompanyServices {
                     user_type: "COMPANY",
                     companyId: newCompany.id,
                     lastLogin: newCompany.lastLogin,
-                    mobileNumber:newCompany.mobileNumber
+                    mobileNumber: newCompany.mobileNumber,
                 },
             });
 
@@ -511,7 +511,7 @@ export class CompanyServices {
                 },
             });
             if (!companyData) {
-                throw new CustomError("Company not found", 404, "Not found");
+                throw new CustomError("Company not found or already blocked", 404, "Not found");
             }
 
             if (companyData.status === "BLOCKED") {
@@ -523,7 +523,7 @@ export class CompanyServices {
                 data: {
                     status: "BLOCKED",
                 },
-            }); 
+            });
             await prisma.user.updateMany({
                 where: {
                     companyId: updateCompany.id,
@@ -563,7 +563,7 @@ export class CompanyServices {
                 },
             });
             if (!companyData) {
-                throw new CustomError("Company not found", 404, "Not found");
+                throw new CustomError("Company not found or already active", 404, "Not found");
             }
             if (companyData.status === "ACTIVE") {
                 throw new CustomError("Company request already unblocked", 400, "Already unblocked");

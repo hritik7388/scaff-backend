@@ -427,7 +427,7 @@ class CompanyServices {
                         password: hasPassword,
                         company_ID: data.company_ID,
                         mobileNumber: data.mobileNumber,
-                        isApproved: "PENDING",
+                        isApproved: "APPROVED",
                         user_type: "COMPANY",
                     },
                 });

@@ -35,11 +35,10 @@ export class superAdminServices {
             const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
                 expiresIn: "30d",
             });
-                await prisma.user.update({
+            await prisma.user.update({
                 where: {id: userData.id},
                 data: {lastLogin: new Date()},
             });
-
 
             const {password: _password, ...safeUserData} = userData;
 
@@ -60,7 +59,7 @@ export class superAdminServices {
     }
 
     async adminDashboard(id: string) {
-        try { 
+        try {
             const totalCompanies = await prisma.company.count({
                 where: {
                     status: {not: "DELETED"},
@@ -84,7 +83,7 @@ export class superAdminServices {
                 where: {
                     status: "BLOCKED",
                 },
-            }); 
+            });
             const deletedCount = await prisma.company.count({
                 where: {
                     status: "DELETED",
@@ -107,7 +106,7 @@ export class superAdminServices {
 
             return {
                 message: "Admin dashboard data fetched successfully",
-                totalCompanies, 
+                totalCompanies,
                 approvedCompanies: approvedCount,
                 activeCompanies: activeCount,
                 blockedCompanies: blockCount,
@@ -127,7 +126,7 @@ export class superAdminServices {
     const superadminEmail = "superadmin@example.com";
     const superadminPassword = "supersecurepassword";
 
-    try { 
+    try {
         const existingSuperAdmin = await prisma.user.findFirst({
             where: {user_type: "SUPER_ADMIN"},
         });
@@ -142,9 +141,9 @@ export class superAdminServices {
                     uuid: uuidv4(),
                     email: superadminEmail,
                     password: hashedPassword,
-                    user_type: "SUPER_ADMIN",  
+                    user_type: "SUPER_ADMIN",
                     name: "Super Admin",
-                    mobileNumber: "7388503329", // Provide a default or valid mobile number
+                    mobileNumber: "7388503329",
                 },
             });
 

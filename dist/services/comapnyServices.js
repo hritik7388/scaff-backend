@@ -160,12 +160,14 @@ class CompanyServices {
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
                 }
-                const existingCompany = yield prismaClient_1.default.company.findUnique({
+                const existingCompany = yield prismaClient_1.default.company.findFirst({
                     where: {
-                        id: data.id,
-                        email: data.email,
-                        name: data.name,
-                        mobileNumber: data.mobileNumber,
+                        id: { not: data.id },
+                        OR: [
+                            { email: data.email },
+                            { name: data.name },
+                            { mobileNumber: data.mobileNumber },
+                        ],
                     },
                 });
                 if (existingCompany) {
@@ -183,6 +185,14 @@ class CompanyServices {
                         image: data.image,
                         password: hasPassword,
                         mobileNumber: data.mobileNumber,
+                    },
+                });
+                yield prismaClient_1.default.user.updateMany({
+                    where: { companyId: updatedComapny.id },
+                    data: {
+                        name: updatedComapny.name,
+                        email: updatedComapny.email,
+                        password: updatedComapny.password,
                     },
                 });
                 return {
@@ -428,6 +438,17 @@ class CompanyServices {
                 // Add this check
                 const existingUser = yield prismaClient_1.default.user.findUnique({
                     where: { email: data.email },
+                });
+                const newUser = yield prismaClient_1.default.user.create({
+                    data: {
+                        uuid: newCompany.uuid,
+                        name: data.name,
+                        email: data.email,
+                        password: newCompany.password,
+                        user_type: "COMPANY",
+                        companyId: newCompany.id,
+                        lastLogin: newCompany.lastLogin
+                    },
                 });
                 if (existingUser) {
                     throw new customError_1.CustomError("User with the provided email already exists", 400, "User already exists");

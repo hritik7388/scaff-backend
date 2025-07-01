@@ -5,53 +5,56 @@ import jwt from "jsonwebtoken";
 
 export class DeviceServices {
 async updateDeviceToken(id: number, data: any) {
-    console.log("id========================>>>>",id)
-  try { 
-    const user = await prisma.user.findFirst({
-      where: { companyId: id },  
-    });
+  console.log("companyId========================>>>>", id);
 
+  try { 
+const user = await prisma.user.findFirst({
+  where: {
+    status: "ACTIVE",
+    OR: [
+      { id: id },           // user ID match
+      { companyId: id }, // company ID match
+    ],
+  },
+});
     if (!user) {
       throw new CustomError("User not found", 404);
-    } 
-    const existingDevice = await prisma.device.findUnique({
-      where: { id: id },
+    }
+
+    // Step 2: Prepare device data
+    const deviceData = {
+      userId: user.id,
+      deviceToken: data.deviceToken,
+      deviceType: data.deviceType,
+      deviceName: data.deviceName,
+      deviceVersion: data.deviceVersion,
+      appVersion: data.appVersion,
+      osVersion: data.osVersion,
+      user_type: user.user_type, 
+    }; 
+    const existingDevice = await prisma.device.findFirst({
+      where: {
+        userId: user.id,
+      },
     });
 
     let device;
 
     if (existingDevice) { 
       device = await prisma.device.update({
-        where: { id: id },
-        data: {
-          userId: data.id,
-          deviceToken: data.deviceToken,
-          deviceType: data.deviceType,
-          deviceName: data.deviceName,
-          deviceVersion: data.deviceVersion,
-          appVersion: data.appVersion,
-          osVersion: data.osVersion, 
-          user_type:user.user_type,
-          lastLogin:user.lastLogin
-        },
+        where: { id: existingDevice.id },
+        data: deviceData,
       });
     } else { 
       device = await prisma.device.create({
-        data: {
-          userId: data.id,
-          deviceToken: data.deviceToken,
-          deviceType: data.deviceType,
-          deviceName: data.deviceName,
-          deviceVersion: data.deviceVersion,
-          appVersion: data.appVersion,
-          osVersion: data.osVersion,  
-          user_type:user.user_type,
-          lastLogin:user.lastLogin
-        },
+        data: deviceData,
       });
-    }
-
-    return device;
+    } 
+return {
+  ...device,
+  id: device.id.toString(),
+  userId: device.userId.toString(),
+};
   } catch (error: any) {
     console.log("error===================>>>", error);
     throw error instanceof CustomError

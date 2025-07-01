@@ -159,14 +159,16 @@ export class CompanyServices {
                 throw new CustomError("Company not found", 404, "Not found");
             }
 
-            const existingCompany = await prisma.company.findUnique({
-                where: {
-                    id: data.id,
-                    email: data.email,
-                    name: data.name,
-                    mobileNumber: data.mobileNumber,
-                },
-            });
+        const existingCompany = await prisma.company.findFirst({
+    where: {
+        id: { not: data.id },
+        OR: [
+            { email: data.email },
+            { name: data.name },
+            { mobileNumber: data.mobileNumber },
+        ],
+    },
+});
             if (existingCompany) {
                 throw new CustomError(
                     "Company with the provided email, name or mobile number already exists",
@@ -174,7 +176,7 @@ export class CompanyServices {
                     "Conflict"
                 );
             }
-            const hasPassword = bcrypt.hashSync(data.password, 10);
+             const hasPassword = bcrypt.hashSync(data.password, 10);
             const updatedComapny = await prisma.company.update({
                 where: {
                     id: companyData.id,
@@ -188,6 +190,14 @@ export class CompanyServices {
                     mobileNumber: data.mobileNumber,
                 },
             });
+              await prisma.user.updateMany({
+            where: { companyId: updatedComapny.id },
+            data: {
+                name: updatedComapny.name,
+                email: updatedComapny.email,
+                password: updatedComapny.password, 
+            },
+        });
             return {
                 message: "Company details updated successfully",
                 company: {
@@ -423,6 +433,7 @@ export class CompanyServices {
                 throw new CustomError("USER not found or not a super admin", 404, "Not Found");
             }
 
+          
             const companyData = await prisma.company.findUnique({
                 where: {
                     email: data.email,
@@ -458,6 +469,18 @@ export class CompanyServices {
             const existingUser = await prisma.user.findUnique({
                 where: {email: data.email},
             });
+         const newUser=await prisma.user.create({
+                data: {
+                    uuid: newCompany.uuid,
+                    name: data.name,
+                    email: data.email,
+                    password: newCompany.password,
+                    user_type: "COMPANY",
+                    companyId: newCompany.id, 
+                    lastLogin:newCompany.lastLogin
+                },
+            })
+
 
             if (existingUser) {
                 throw new CustomError("User with the provided email already exists", 400, "User already exists");

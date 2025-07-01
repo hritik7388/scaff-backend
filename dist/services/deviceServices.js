@@ -18,50 +18,49 @@ const customError_1 = require("../types/customError");
 class DeviceServices {
     updateDeviceToken(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("id========================>>>>", id);
+            console.log("companyId========================>>>>", id);
             try {
                 const user = yield prismaClient_1.default.user.findFirst({
-                    where: { companyId: id },
+                    where: {
+                        status: "ACTIVE",
+                        OR: [
+                            { id: id }, // user ID match
+                            { companyId: id }, // company ID match
+                        ],
+                    },
                 });
                 if (!user) {
                     throw new customError_1.CustomError("User not found", 404);
                 }
-                const existingDevice = yield prismaClient_1.default.device.findUnique({
-                    where: { id: id },
+                // Step 2: Prepare device data
+                const deviceData = {
+                    userId: user.id,
+                    deviceToken: data.deviceToken,
+                    deviceType: data.deviceType,
+                    deviceName: data.deviceName,
+                    deviceVersion: data.deviceVersion,
+                    appVersion: data.appVersion,
+                    osVersion: data.osVersion,
+                    user_type: user.user_type,
+                };
+                const existingDevice = yield prismaClient_1.default.device.findFirst({
+                    where: {
+                        userId: user.id,
+                    },
                 });
                 let device;
                 if (existingDevice) {
                     device = yield prismaClient_1.default.device.update({
-                        where: { id: id },
-                        data: {
-                            userId: data.id,
-                            deviceToken: data.deviceToken,
-                            deviceType: data.deviceType,
-                            deviceName: data.deviceName,
-                            deviceVersion: data.deviceVersion,
-                            appVersion: data.appVersion,
-                            osVersion: data.osVersion,
-                            user_type: user.user_type,
-                            lastLogin: user.lastLogin
-                        },
+                        where: { id: existingDevice.id },
+                        data: deviceData,
                     });
                 }
                 else {
                     device = yield prismaClient_1.default.device.create({
-                        data: {
-                            userId: data.id,
-                            deviceToken: data.deviceToken,
-                            deviceType: data.deviceType,
-                            deviceName: data.deviceName,
-                            deviceVersion: data.deviceVersion,
-                            appVersion: data.appVersion,
-                            osVersion: data.osVersion,
-                            user_type: user.user_type,
-                            lastLogin: user.lastLogin
-                        },
+                        data: deviceData,
                     });
                 }
-                return device;
+                return Object.assign(Object.assign({}, device), { id: device.id.toString(), userId: device.userId.toString() });
             }
             catch (error) {
                 console.log("error===================>>>", error);

@@ -16,11 +16,10 @@ const deviceServicesController = new deviceServices_1.DeviceServices();
 class DeviceController {
     updateDevice(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
             try {
-                const id = Number((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
+                const { id, user_type } = req.user;
                 const data = deviceTokenSchema_1.deviceSchema.parse(req.body);
-                const user = yield deviceServicesController.updateDeviceToken(id, data);
+                const user = yield deviceServicesController.updateDeviceToken(Number(id), Object.assign(Object.assign({}, data), { user_type }));
                 res.status(200).json(user);
             }
             catch (err) {

@@ -62,6 +62,7 @@ class CompanyServices {
                         user_type: "COMPANY",
                         companyId: newCompany.id,
                         lastLogin: newCompany.lastLogin,
+                        mobileNumber: newCompany.mobileNumber,
                     },
                 });
                 if (existingUser) {
@@ -443,6 +444,7 @@ class CompanyServices {
                         user_type: "COMPANY",
                         companyId: newCompany.id,
                         lastLogin: newCompany.lastLogin,
+                        mobileNumber: newCompany.mobileNumber
                     },
                 });
                 if (existingUser) {

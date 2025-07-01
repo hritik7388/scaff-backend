@@ -14,7 +14,8 @@ const authMiddleware = (req, res, next) => {
             req.user = {
                 user_id: decoded.user_id,
                 user_uuid: decoded.user_uuid,
-                id: decoded.id
+                id: decoded.id,
+                user_type: decoded.user_type // Ensure user_type is present in the token payload
             };
             next();
         }

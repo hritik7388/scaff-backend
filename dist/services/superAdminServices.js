@@ -77,7 +77,6 @@ class superAdminServices {
     adminDashboard(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // Total companies excluding deleted ones
                 const totalCompanies = yield prismaClient_1.default.company.count({
                     where: {
                         status: { not: "DELETED" },
@@ -99,7 +98,6 @@ class superAdminServices {
                         status: "BLOCKED",
                     },
                 });
-                // Deleted companies counted separately
                 const deletedCount = yield prismaClient_1.default.company.count({
                     where: {
                         status: "DELETED",
@@ -119,7 +117,7 @@ class superAdminServices {
                 });
                 return {
                     message: "Admin dashboard data fetched successfully",
-                    totalCompanies, // Excludes deleted
+                    totalCompanies,
                     approvedCompanies: approvedCount,
                     activeCompanies: activeCount,
                     blockedCompanies: blockCount,
@@ -141,7 +139,6 @@ exports.superAdminServices = superAdminServices;
     const superadminEmail = "superadmin@example.com";
     const superadminPassword = "supersecurepassword";
     try {
-        // Check if a superadmin already exists
         const existingSuperAdmin = yield prismaClient_1.default.user.findFirst({
             where: { user_type: "SUPER_ADMIN" },
         });
@@ -155,8 +152,9 @@ exports.superAdminServices = superAdminServices;
                     uuid: (0, uuid_1.v4)(),
                     email: superadminEmail,
                     password: hashedPassword,
-                    user_type: "SUPER_ADMIN", // ✅ only if added in model
+                    user_type: "SUPER_ADMIN",
                     name: "Super Admin",
+                    mobileNumber: "7388503329", // Provide a default or valid mobile number
                 },
             });
             console.log("✅ Default superadmin created successfully.");

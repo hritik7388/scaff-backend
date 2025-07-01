@@ -19,13 +19,29 @@ class DeviceServices {
     updateDeviceToken(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("companyId========================>>>>", id);
+            console.log("user_type========================>>>>", data.user_type);
             try {
-                const user = yield prismaClient_1.default.user.findFirst({
-                    where: {
-                        status: "ACTIVE",
-                        OR: [{ id: id }, { companyId: id }],
-                    },
-                });
+                let user;
+                if (data.user_type === "COMPANY") {
+                    user = yield prismaClient_1.default.user.findFirst({
+                        where: {
+                            status: "ACTIVE",
+                            companyId: id,
+                            user_type: "COMPANY",
+                        },
+                    });
+                    console.log("user======================>>>>>", user);
+                }
+                else {
+                    user = yield prismaClient_1.default.user.findFirst({
+                        where: {
+                            status: "ACTIVE",
+                            id: id,
+                            user_type: data.user_type,
+                        },
+                    });
+                    console.log("user2==========================>>>>>", user);
+                }
                 if (!user) {
                     throw new customError_1.CustomError("User not found", 404);
                 }

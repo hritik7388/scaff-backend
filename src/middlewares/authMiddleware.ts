@@ -22,8 +22,8 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       req.user = {
         user_id: decoded.user_id as number,
         user_uuid: decoded.user_uuid as string,
-        id:decoded.id as number
-
+        id: decoded.id as number,
+        user_type: (decoded as any).user_type as string // Ensure user_type is present in the token payload
       };
       next();
     } catch(error) {

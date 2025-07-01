@@ -57,23 +57,29 @@ model Company {
 }
 
 model User {
-  id                BigInt   @id @default(autoincrement())
-  uuid              String   @unique 
-  name              String
-  email             String   @unique  
-  password          String
-  jobId             String?   
-  user_type         Role
-  status            UserStatus    @default(ACTIVE)
-  isDeleted    Boolean          @default(false)
-  companyId         BigInt?
-  company           Company? @relation(fields: [companyId], references: [id]) 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  lastLogin         DateTime? 
-
-  devices           Device[] 
+  id               BigInt      @id @default(autoincrement())
+  uuid             String      @unique
+  name             String
+  email            String      @unique
+  password         String
+  mobileNumber     String
+  dob              DateTime?
+  jobId            String?
+  idProofImage     String?
+  photoImage       String?
+  address          String?
+  user_type        Role
+  status           UserStatus  @default(ACTIVE)
+  isDeleted        Boolean     @default(false)
+  companyId        BigInt?
+  company          Company?    @relation(fields: [companyId], references: [id])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  lastLogin        DateTime?
+  
+  devices          Device[]
 }
+
 
 model Device {
   id            BigInt    @id @default(autoincrement())  

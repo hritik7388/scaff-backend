@@ -60,8 +60,7 @@ export class superAdminServices {
     }
 
     async adminDashboard(id: string) {
-        try {
-            // Total companies excluding deleted ones
+        try { 
             const totalCompanies = await prisma.company.count({
                 where: {
                     status: {not: "DELETED"},
@@ -85,9 +84,7 @@ export class superAdminServices {
                 where: {
                     status: "BLOCKED",
                 },
-            });
-
-            // Deleted companies counted separately
+            }); 
             const deletedCount = await prisma.company.count({
                 where: {
                     status: "DELETED",
@@ -110,7 +107,7 @@ export class superAdminServices {
 
             return {
                 message: "Admin dashboard data fetched successfully",
-                totalCompanies, // Excludes deleted
+                totalCompanies, 
                 approvedCompanies: approvedCount,
                 activeCompanies: activeCount,
                 blockedCompanies: blockCount,
@@ -130,8 +127,7 @@ export class superAdminServices {
     const superadminEmail = "superadmin@example.com";
     const superadminPassword = "supersecurepassword";
 
-    try {
-        // Check if a superadmin already exists
+    try { 
         const existingSuperAdmin = await prisma.user.findFirst({
             where: {user_type: "SUPER_ADMIN"},
         });
@@ -146,8 +142,9 @@ export class superAdminServices {
                     uuid: uuidv4(),
                     email: superadminEmail,
                     password: hashedPassword,
-                    user_type: "SUPER_ADMIN", // ✅ only if added in model
+                    user_type: "SUPER_ADMIN",  
                     name: "Super Admin",
+                    mobileNumber: "7388503329", // Provide a default or valid mobile number
                 },
             });
 

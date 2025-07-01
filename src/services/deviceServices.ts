@@ -6,17 +6,34 @@ import jwt from "jsonwebtoken";
 export class DeviceServices {
     async updateDeviceToken(id: number, data: any) {
         console.log("companyId========================>>>>", id);
+        console.log("user_type========================>>>>", data.user_type);
 
         try {
-            const user = await prisma.user.findFirst({
+          
+           let user;
+
+        if (data.user_type === "COMPANY") {
+            user = await prisma.user.findFirst({
                 where: {
                     status: "ACTIVE",
-                    OR: [{id: id}, {companyId: id}],
+                    companyId: id,
+                    user_type: "COMPANY",
                 },
             });
+            console.log("user======================>>>>>",user)
+        } else {
+            user = await prisma.user.findFirst({
+                where: {
+                    status: "ACTIVE",
+                    id: id,
+                    user_type: data.user_type,
+                },
+            });
+            console.log("user2==========================>>>>>",user)
+        }
             if (!user) {
                 throw new CustomError("User not found", 404);
-            } 
+            }
             const deviceData = {
                 userId: user.id,
                 deviceToken: data.deviceToken,

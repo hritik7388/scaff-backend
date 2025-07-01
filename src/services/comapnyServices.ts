@@ -47,8 +47,9 @@ export class CompanyServices {
                     email: data.email,
                     password: newCompany.password,
                     user_type: "COMPANY",
-                    companyId: newCompany.id,
+                    companyId: newCompany.id,                    
                     lastLogin: newCompany.lastLogin,
+                     mobileNumber: newCompany.mobileNumber,
                 },
             });
 
@@ -470,6 +471,7 @@ export class CompanyServices {
                     user_type: "COMPANY",
                     companyId: newCompany.id,
                     lastLogin: newCompany.lastLogin,
+                    mobileNumber:newCompany.mobileNumber
                 },
             });
 

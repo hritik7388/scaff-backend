@@ -494,6 +494,15 @@ class CompanyServices {
                         status: "BLOCKED",
                     },
                 });
+                // If you want to update all users belonging to the company, use updateMany instead of findUnique
+                yield prismaClient_1.default.user.updateMany({
+                    where: {
+                        companyId: updateCompany.id
+                    },
+                    data: {
+                        status: updateCompany.status
+                    }
+                });
                 return {
                     message: "Company BLOCKED successfully",
                     company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
@@ -534,6 +543,14 @@ class CompanyServices {
                         status: "ACTIVE",
                     },
                 });
+                yield prismaClient_1.default.user.updateMany({
+                    where: {
+                        companyId: updateCompany.id
+                    },
+                    data: {
+                        status: updateCompany.status
+                    }
+                });
                 return {
                     message: "Company activate successfully",
                     company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
@@ -573,6 +590,15 @@ class CompanyServices {
                         status: "DELETED",
                         isDeleted: true,
                     },
+                });
+                yield prismaClient_1.default.user.updateMany({
+                    where: {
+                        companyId: updateCompany.id
+                    },
+                    data: {
+                        status: updateCompany.status,
+                        isDeleted: updateCompany.isDeleted
+                    }
                 });
                 return {
                     message: "Company deleted successfully",

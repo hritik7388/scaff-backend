@@ -35,6 +35,11 @@ export class superAdminServices {
             const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
                 expiresIn: "30d",
             });
+                await prisma.user.update({
+                where: {id: userData.id},
+                data: {lastLogin: new Date()},
+            });
+
 
             const {password: _password, ...safeUserData} = userData;
 

@@ -50,7 +50,6 @@ class CompanyServices {
                         user_type: "COMPANY",
                     },
                 });
-                // Add this check
                 const existingUser = yield prismaClient_1.default.user.findUnique({
                     where: { email: data.email },
                 });
@@ -62,7 +61,7 @@ class CompanyServices {
                         password: newCompany.password,
                         user_type: "COMPANY",
                         companyId: newCompany.id,
-                        lastLogin: newCompany.lastLogin
+                        lastLogin: newCompany.lastLogin,
                     },
                 });
                 if (existingUser) {
@@ -123,7 +122,7 @@ class CompanyServices {
                     name: companyData.name,
                     email: companyData.email,
                     user_type: companyData.user_type,
-                    companyId: (_b = (_a = companyData.id) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : null, // in case companyId is BigInt
+                    companyId: (_b = (_a = companyData.id) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : null,
                 };
                 yield prismaClient_1.default.company.update({
                     where: { id: companyData.id },
@@ -163,11 +162,7 @@ class CompanyServices {
                 const existingCompany = yield prismaClient_1.default.company.findFirst({
                     where: {
                         id: { not: data.id },
-                        OR: [
-                            { email: data.email },
-                            { name: data.name },
-                            { mobileNumber: data.mobileNumber },
-                        ],
+                        OR: [{ email: data.email }, { name: data.name }, { mobileNumber: data.mobileNumber }],
                     },
                 });
                 if (existingCompany) {
@@ -447,7 +442,7 @@ class CompanyServices {
                         password: newCompany.password,
                         user_type: "COMPANY",
                         companyId: newCompany.id,
-                        lastLogin: newCompany.lastLogin
+                        lastLogin: newCompany.lastLogin,
                     },
                 });
                 if (existingUser) {
@@ -494,14 +489,13 @@ class CompanyServices {
                         status: "BLOCKED",
                     },
                 });
-                // If you want to update all users belonging to the company, use updateMany instead of findUnique
                 yield prismaClient_1.default.user.updateMany({
                     where: {
-                        companyId: updateCompany.id
+                        companyId: updateCompany.id,
                     },
                     data: {
-                        status: updateCompany.status
-                    }
+                        status: updateCompany.status,
+                    },
                 });
                 return {
                     message: "Company BLOCKED successfully",
@@ -545,11 +539,11 @@ class CompanyServices {
                 });
                 yield prismaClient_1.default.user.updateMany({
                     where: {
-                        companyId: updateCompany.id
+                        companyId: updateCompany.id,
                     },
                     data: {
-                        status: updateCompany.status
-                    }
+                        status: updateCompany.status,
+                    },
                 });
                 return {
                     message: "Company activate successfully",
@@ -593,12 +587,12 @@ class CompanyServices {
                 });
                 yield prismaClient_1.default.user.updateMany({
                     where: {
-                        companyId: updateCompany.id
+                        companyId: updateCompany.id,
                     },
                     data: {
                         status: updateCompany.status,
-                        isDeleted: updateCompany.isDeleted
-                    }
+                        isDeleted: updateCompany.isDeleted,
+                    },
                 });
                 return {
                     message: "Company deleted successfully",

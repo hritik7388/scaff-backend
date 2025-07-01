@@ -23,16 +23,12 @@ class DeviceServices {
                 const user = yield prismaClient_1.default.user.findFirst({
                     where: {
                         status: "ACTIVE",
-                        OR: [
-                            { id: id }, // user ID match
-                            { companyId: id }, // company ID match
-                        ],
+                        OR: [{ id: id }, { companyId: id }],
                     },
                 });
                 if (!user) {
                     throw new customError_1.CustomError("User not found", 404);
                 }
-                // Step 2: Prepare device data
                 const deviceData = {
                     userId: user.id,
                     deviceToken: data.deviceToken,

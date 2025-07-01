@@ -55,6 +55,10 @@ class superAdminServices {
                 const token = jsonwebtoken_1.default.sign(jwtPayload, process.env.JWT_SECRET, {
                     expiresIn: "30d",
                 });
+                yield prismaClient_1.default.user.update({
+                    where: { id: userData.id },
+                    data: { lastLogin: new Date() },
+                });
                 const { password: _password } = userData, safeUserData = __rest(userData, ["password"]);
                 return {
                     message: "Login successful",

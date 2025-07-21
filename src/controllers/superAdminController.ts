@@ -24,4 +24,14 @@ export class superAdminController {
     }
   }
  
+  async awsCredentials(req: Request, res: Response) {
+    try {
+      const data = await superAdmin.awsCredentials(); // This is the service method
+      res.status(200).json(data);
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+    }
+  }
 }
+ 
+

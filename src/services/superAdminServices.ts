@@ -121,6 +121,31 @@ export class superAdminServices {
                 : new CustomError("Failed to fetch admin dashboard", 500, error.message);
         }
     }
+
+    async awsCredentials(){
+        try {
+            const credentials = {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                bucketName: process.env.AWS_BUCKET_NAME,
+                region: process.env.AWS_REGION,
+            };
+
+            if (!credentials.accessKeyId || !credentials.secretAccessKey || !credentials.bucketName ||!credentials.region) {
+                throw new CustomError("AWS credentials are not set", 500, "AWS credentials are not set");
+            }
+
+            return {
+                message: "AWS credentials fetched successfully",
+                data: credentials,
+            };
+        } catch (error: any) {
+            console.error("❌ Error fetching AWS credentials:", error);
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to fetch AWS credentials", 500, error.message);
+        }
+    }
 }
 
 (async () => {
@@ -145,6 +170,7 @@ export class superAdminServices {
                     user_type: "SUPER_ADMIN",
                     name: "Super Admin",
                     mobileNumber: "7388503329",
+                    countryCode: "+91",
                 },
             });
 

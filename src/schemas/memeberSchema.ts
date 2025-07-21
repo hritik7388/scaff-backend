@@ -5,6 +5,7 @@ export const addMemberSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
   mobileNumber: z.string(),
+  countryCode: z.string().min(1, "Country code is required"),
   dob: z.string().refine(val => !isNaN(Date.parse(val)), {
   message: "Invalid date format for dob",
 }),

@@ -7,6 +7,7 @@ exports.addMemberSchema = zod_1.z.object({
     email: zod_1.z.string().email("Invalid email format"),
     password: zod_1.z.string().min(6, "Password must be at least 6 characters long"),
     mobileNumber: zod_1.z.string(),
+    countryCode: zod_1.z.string().min(1, "Country code is required"),
     dob: zod_1.z.string().refine(val => !isNaN(Date.parse(val)), {
         message: "Invalid date format for dob",
     }),

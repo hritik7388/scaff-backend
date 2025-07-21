@@ -1,20 +1,36 @@
- 
-import { SendEmailCommand } from "@aws-sdk/client-ses";
-// Adjust the import according to the actual export from awsSesConfig
+import {SendEmailCommand} from "@aws-sdk/client-ses";
+
 import Configs from "../config/awsSesConfig";
+const allowedImageTypes = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/svg+xml",
+  "image/gif"
+];
+const allowedDocumentTypes = [
+    "application/pdf",
+    "image/jpg",
+    "image/png",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+ 
 
-   export function generateCMP_ID() {
-        const tagNumber = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-        return tagNumber;
-    }
-
+export function generateCMP_ID() {
+    const tagNumber = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
+    return tagNumber;
+}
 
 export const sendMailApproval = async (toEmail: string, password: string): Promise<string> => {
-  const fromEmail = process.env.EMAIL_FROM;
-  if (!fromEmail) throw new Error("EMAIL_FROM is not defined in environment variables");
+    const fromEmail = process.env.EMAIL_FROM;
+    if (!fromEmail) throw new Error("EMAIL_FROM is not defined in environment variables");
 
-  const subject = 'Your Company Registration Approved';
-  const bodyHtml = `
+    const subject = "Your Company Registration Approved";
+    const bodyHtml = `
     <html>
       <body>
         <h2>Company Registration Approved</h2>
@@ -26,32 +42,32 @@ export const sendMailApproval = async (toEmail: string, password: string): Promi
     </html>
   `;
 
-  const params = {
-    Destination: {
-      ToAddresses: [toEmail],
-    },
-    Message: {
-      Body: {
-        Html: {
-          Charset: 'UTF-8',
-          Data: bodyHtml,
+    const params = {
+        Destination: {
+            ToAddresses: [toEmail],
         },
-      },
-      Subject: {
-        Charset: 'UTF-8',
-        Data: subject,
-      },
-    },
-    Source: fromEmail,
-  };
+        Message: {
+            Body: {
+                Html: {
+                    Charset: "UTF-8",
+                    Data: bodyHtml,
+                },
+            },
+            Subject: {
+                Charset: "UTF-8",
+                Data: subject,
+            },
+        },
+        Source: fromEmail,
+    };
 
-  try {
-    const command = new SendEmailCommand(params);
-    await Configs.send(command);
-    return `Email sent to ${toEmail}`;
-  } catch (err) {
-    console.error("Error sending approval email:", err);
-    throw new Error("Failed to send approval email");
-  }
+    try {
+        const command = new SendEmailCommand(params);
+        await Configs.send(command);
+        return `Email sent to ${toEmail}`;
+    } catch (err) {
+        console.error("Error sending approval email:", err);
+        throw new Error("Failed to send approval email");
+    }
 };
 

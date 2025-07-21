@@ -68,7 +68,9 @@ class DeviceServices {
                         data: deviceData,
                     });
                 }
-                return Object.assign(Object.assign({}, device), { id: device.id.toString(), userId: device.userId.toString() });
+                return {
+                    data: Object.assign(Object.assign({}, device), { id: device.id.toString(), userId: device.userId.toString() })
+                };
             }
             catch (error) {
                 throw error instanceof customError_1.CustomError

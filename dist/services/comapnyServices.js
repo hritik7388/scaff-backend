@@ -32,8 +32,8 @@ class CompanyServices {
                 if (companyData) {
                     throw new customError_1.CustomError("Company with the provided email already exists", 400, "Company already exists");
                 }
-                if (data.password !== data.confirmPassword) {
-                    throw new customError_1.CustomError("Password and confirm password do not match", 400, "Password mismatch");
+                if (data.password !== data.password) {
+                    throw new customError_1.CustomError("Password  do not match", 400, "Password mismatch");
                 }
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const newCompany = yield prismaClient_1.default.company.create({
@@ -44,10 +44,12 @@ class CompanyServices {
                         address: data.address,
                         image: data.image,
                         password: hasPassword,
-                        company_ID: data.company_ID,
                         mobileNumber: data.mobileNumber,
+                        countryCode: data.countryCode, // ✅ This now works after generate
                         isApproved: "PENDING",
                         user_type: "COMPANY",
+                        latitude: data.latitude,
+                        longitude: data.longitude,
                     },
                 });
                 const existingUser = yield prismaClient_1.default.user.findUnique({
@@ -60,17 +62,31 @@ class CompanyServices {
                         email: data.email,
                         password: newCompany.password,
                         user_type: "COMPANY",
-                        companyId: newCompany.id,
                         lastLogin: newCompany.lastLogin,
                         mobileNumber: newCompany.mobileNumber,
+                        countryCode: newCompany.countryCode, // ✅ Fixed
+                        address: data.address,
+                        companyId: newCompany.id,
                     },
                 });
                 if (existingUser) {
                     throw new customError_1.CustomError("User with the provided email already exists", 400, "User already exists");
                 }
+                const jwtPayload = {
+                    login_id: newCompany.email,
+                    id: newCompany.id.toString(),
+                    uuid: newCompany.uuid,
+                    user_type: newCompany.user_type,
+                    mobileNumber: newCompany.mobileNumber,
+                    countryCode: newCompany.countryCode,
+                };
+                const token = jsonwebtoken_1.default.sign(jwtPayload, process.env.JWT_SECRET, {
+                    expiresIn: "30d",
+                });
                 return {
                     message: "Company registered successfully",
-                    company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
+                    token,
+                    data: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
                 };
             }
             catch (error) {
@@ -196,6 +212,9 @@ class CompanyServices {
                         image: data.image,
                         password: hasPassword,
                         mobileNumber: data.mobileNumber,
+                        countryCode: data.countryCode, // ✅ Will not throw error now
+                        latitude: data.latitude,
+                        longitude: data.longitude,
                     },
                 });
                 yield prismaClient_1.default.user.updateMany({
@@ -208,7 +227,7 @@ class CompanyServices {
                 });
                 return {
                     message: "Company details updated successfully",
-                    company: Object.assign(Object.assign({}, updatedComapny), { id: updatedComapny.id.toString() }),
+                    data: Object.assign(Object.assign({}, updatedComapny), { id: updatedComapny.id.toString() }),
                 };
             }
             catch (error) {
@@ -233,7 +252,7 @@ class CompanyServices {
                 const totalPages = Math.ceil(totalCount / limit);
                 return {
                     message: "All company details fetched successfully",
-                    companies: companyData.map((company) => (Object.assign(Object.assign({}, company), { id: company.id.toString() }))),
+                    datas: companyData.map((company) => (Object.assign(Object.assign({}, company), { id: company.id.toString() }))),
                     totalCount,
                     totalPages,
                     currentPage: page,
@@ -267,7 +286,7 @@ class CompanyServices {
                 }
                 return {
                     message: "Company details fetched successfully",
-                    company: Object.assign(Object.assign({}, companyData), { id: companyData.id.toString() }),
+                    data: Object.assign(Object.assign({}, companyData), { id: companyData.id.toString() }),
                 };
             }
             catch (error) {
@@ -344,7 +363,7 @@ class CompanyServices {
                 });
                 return {
                     message: "Company request rejected successfully",
-                    company: Object.assign(Object.assign({}, updatedCompany), { id: updatedCompany.id.toString() }),
+                    data: Object.assign(Object.assign({}, updatedCompany), { id: updatedCompany.id.toString() }),
                 };
             }
             catch (error) {
@@ -442,8 +461,8 @@ class CompanyServices {
                         address: data.address,
                         image: data.image,
                         password: hasPassword,
-                        company_ID: data.company_ID,
                         mobileNumber: data.mobileNumber,
+                        countryCode: data.countryCode,
                         isApproved: "APPROVED",
                         user_type: "COMPANY",
                     },
@@ -462,6 +481,7 @@ class CompanyServices {
                         companyId: newCompany.id,
                         lastLogin: newCompany.lastLogin,
                         mobileNumber: newCompany.mobileNumber,
+                        countryCode: data.countryCode, // Add countryCode here
                     },
                 });
                 if (existingUser) {
@@ -469,7 +489,7 @@ class CompanyServices {
                 }
                 return {
                     message: "Company registered successfully",
-                    company: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
+                    data: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
                 };
             }
             catch (error) {
@@ -518,7 +538,7 @@ class CompanyServices {
                 });
                 return {
                     message: "Company BLOCKED successfully",
-                    company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
+                    data: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
                 };
             }
             catch (error) {
@@ -566,7 +586,7 @@ class CompanyServices {
                 });
                 return {
                     message: "Company activate successfully",
-                    company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
+                    data: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
                 };
             }
             catch (error) {
@@ -615,7 +635,7 @@ class CompanyServices {
                 });
                 return {
                     message: "Company deleted successfully",
-                    company: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
+                    data: Object.assign(Object.assign({}, updateCompany), { id: updateCompany.id.toString() }),
                 };
             }
             catch (error) {

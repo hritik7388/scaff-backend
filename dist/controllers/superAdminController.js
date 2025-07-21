@@ -39,5 +39,16 @@ class superAdminController {
             }
         });
     }
+    awsCredentials(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const data = yield superAdmin.awsCredentials(); // This is the service method
+                res.status(200).json(data);
+            }
+            catch (err) {
+                res.status(400).json({ error: err.message });
+            }
+        });
+    }
 }
 exports.superAdminController = superAdminController;

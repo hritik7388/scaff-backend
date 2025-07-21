@@ -46,6 +46,7 @@ class AddMemberServices {
                         email: data.email,
                         password: hashedPassword,
                         mobileNumber: data.mobileNumber,
+                        countryCode: data.countryCode,
                         dob: new Date(data.dob),
                         jobId: data.jobId,
                         idProofImage: data.idProofImage,

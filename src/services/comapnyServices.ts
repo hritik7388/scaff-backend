@@ -1,6 +1,6 @@
 import prisma from "../config/prismaClient";
 import {CustomError} from "../types/customError";
-import {generateCMP_ID, sendMailApproval} from "../helpers/utils";
+import { sendMailApproval} from "../helpers/utils";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import {v4 as uuidv4} from "uuid";
@@ -19,47 +19,65 @@ export class CompanyServices {
                 throw new CustomError("Company with the provided email already exists", 400, "Company already exists");
             }
 
-            if (data.password !== data.confirmPassword) {
-                throw new CustomError("Password and confirm password do not match", 400, "Password mismatch");
+            if (data.password !== data.password) {
+                throw new CustomError("Password  do not match", 400, "Password mismatch");
             }
-            const hasPassword = bcrypt.hashSync(data.password, 10);
-            const newCompany = await prisma.company.create({
-                data: {
-                    uuid: uuidv4(),
-                    name: data.name,
-                    email: data.email,
-                    address: data.address,
-                    image: data.image,
-                    password: hasPassword,
-                    company_ID: data.company_ID,
-                    mobileNumber: data.mobileNumber,
-                    isApproved: "PENDING",
-                    user_type: "COMPANY",
-                },
-            });
+            const hasPassword = bcrypt.hashSync(data.password, 10);  
+ const newCompany = await prisma.company.create({
+  data: {
+    uuid: uuidv4(),
+    name: data.name,
+    email: data.email,
+    address: data.address,
+    image: data.image,
+    password: hasPassword,
+    mobileNumber: data.mobileNumber,
+    countryCode: data.countryCode, // ✅ This now works after generate
+    isApproved: "PENDING",
+    user_type: "COMPANY",
+    latitude: data.latitude,
+    longitude: data.longitude,
+  },
+});
             const existingUser = await prisma.user.findUnique({
                 where: {email: data.email},
             });
-            const newUser = await prisma.user.create({
-                data: {
-                    uuid: newCompany.uuid,
-                    name: data.name,
-                    email: data.email,
-                    password: newCompany.password,
-                    user_type: "COMPANY",
-                    companyId: newCompany.id,
-                    lastLogin: newCompany.lastLogin,
-                    mobileNumber: newCompany.mobileNumber,
-                },
-            });
+const newUser = await prisma.user.create({
+  data: {
+    uuid: newCompany.uuid,
+    name: data.name,
+    email: data.email,
+    password: newCompany.password,
+    user_type: "COMPANY",
+    lastLogin: newCompany.lastLogin,
+    mobileNumber: newCompany.mobileNumber,
+    countryCode: newCompany.countryCode, // ✅ Fixed
+    address: data.address,
+    companyId: newCompany.id,
+  },
+});
 
             if (existingUser) {
                 throw new CustomError("User with the provided email already exists", 400, "User already exists");
             }
+              const jwtPayload = {
+            login_id: newCompany.email,
+            id: newCompany.id.toString(),
+            uuid: newCompany.uuid,
+            user_type: newCompany.user_type,
+            mobileNumber: newCompany.mobileNumber,
+            countryCode: newCompany.countryCode,
+        };
+
+        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
+            expiresIn: "30d",
+        });
+
 
             return {
                 message: "Company registered successfully",
-                company: {
+                token,
+                data: {
                     ...newCompany,
                     id: newCompany.id.toString(),
                 },
@@ -190,12 +208,15 @@ async updateCompanyDetails(id: number, data: any) {
                 id: companyData.id,
             },
             data: {
-                name: data.name,
-                email: data.email,
-                address: data.address,
-                image: data.image,
-                password: hasPassword,
-                mobileNumber: data.mobileNumber,
+               name: data.name,
+    email: data.email,
+    address: data.address,
+    image: data.image,
+    password: hasPassword,
+    mobileNumber: data.mobileNumber,
+    countryCode: data.countryCode, // ✅ Will not throw error now
+    latitude: data.latitude,
+    longitude: data.longitude,
             },
         });
 
@@ -210,7 +231,7 @@ async updateCompanyDetails(id: number, data: any) {
 
         return {
             message: "Company details updated successfully",
-            company: {
+            data: {
                 ...updatedComapny,
                 id: updatedComapny.id.toString(),
             },
@@ -240,7 +261,7 @@ async updateCompanyDetails(id: number, data: any) {
 
             return {
                 message: "All company details fetched successfully",
-                companies: companyData.map((company: any) => ({
+                datas: companyData.map((company: any) => ({
                     ...company,
                     id: company.id.toString(),
                 })),
@@ -277,7 +298,7 @@ async updateCompanyDetails(id: number, data: any) {
 
             return {
                 message: "Company details fetched successfully",
-                company: {
+                data: {
                     ...companyData,
                     id: companyData.id.toString(),
                 },
@@ -359,7 +380,7 @@ async updateCompanyDetails(id: number, data: any) {
             });
             return {
                 message: "Company request rejected successfully",
-                company: {
+                data: {
                     ...updatedCompany,
                     id: updatedCompany.id.toString(),
                 },
@@ -469,9 +490,9 @@ async updateCompanyDetails(id: number, data: any) {
                     email: data.email,
                     address: data.address,
                     image: data.image,
-                    password: hasPassword,
-                    company_ID: data.company_ID,
+                    password: hasPassword, 
                     mobileNumber: data.mobileNumber,
+                    countryCode: data.countryCode,
                     isApproved: "APPROVED",
                     user_type: "COMPANY",
                 },
@@ -490,7 +511,8 @@ async updateCompanyDetails(id: number, data: any) {
                     user_type: "COMPANY",
                     companyId: newCompany.id,
                     lastLogin: newCompany.lastLogin,
-                    mobileNumber: newCompany.mobileNumber,
+                    mobileNumber: newCompany.mobileNumber, 
+                    countryCode: data.countryCode, // Add countryCode here
                 },
             });
 
@@ -500,7 +522,7 @@ async updateCompanyDetails(id: number, data: any) {
 
             return {
                 message: "Company registered successfully",
-                company: {
+                data: {
                     ...newCompany,
                     id: newCompany.id.toString(), // convert BigInt to string
                 },
@@ -553,7 +575,7 @@ async updateCompanyDetails(id: number, data: any) {
             });
             return {
                 message: "Company BLOCKED successfully",
-                company: {
+                data: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),
                 },
@@ -603,7 +625,7 @@ async updateCompanyDetails(id: number, data: any) {
             });
             return {
                 message: "Company activate successfully",
-                company: {
+                data: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),
                 },
@@ -654,7 +676,7 @@ async updateCompanyDetails(id: number, data: any) {
             });
             return {
                 message: "Company deleted successfully",
-                company: {
+                data: {
                     ...updateCompany,
                     id: updateCompany.id.toString(),
                 },

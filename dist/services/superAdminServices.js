@@ -134,6 +134,31 @@ class superAdminServices {
             }
         });
     }
+    awsCredentials() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const credentials = {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                    bucketName: process.env.AWS_BUCKET_NAME,
+                    region: process.env.AWS_REGION,
+                };
+                if (!credentials.accessKeyId || !credentials.secretAccessKey || !credentials.bucketName || !credentials.region) {
+                    throw new customError_1.CustomError("AWS credentials are not set", 500, "AWS credentials are not set");
+                }
+                return {
+                    message: "AWS credentials fetched successfully",
+                    data: credentials,
+                };
+            }
+            catch (error) {
+                console.error("❌ Error fetching AWS credentials:", error);
+                throw error instanceof customError_1.CustomError
+                    ? error
+                    : new customError_1.CustomError("Failed to fetch AWS credentials", 500, error.message);
+            }
+        });
+    }
 }
 exports.superAdminServices = superAdminServices;
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -156,6 +181,7 @@ exports.superAdminServices = superAdminServices;
                     user_type: "SUPER_ADMIN",
                     name: "Super Admin",
                     mobileNumber: "7388503329",
+                    countryCode: "+91",
                 },
             });
             console.log("✅ Default superadmin created successfully.");

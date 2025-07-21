@@ -54,9 +54,11 @@ export class DeviceServices {
                 });
             }
             return {
+                data:{
                 ...device,
                 id: device.id.toString(),
                 userId: device.userId.toString(),
+                }
             };
         } catch (error: any) {
             throw error instanceof CustomError

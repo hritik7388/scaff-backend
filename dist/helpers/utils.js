@@ -15,8 +15,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendMailApproval = void 0;
 exports.generateCMP_ID = generateCMP_ID;
 const client_ses_1 = require("@aws-sdk/client-ses");
-// Adjust the import according to the actual export from awsSesConfig
 const awsSesConfig_1 = __importDefault(require("../config/awsSesConfig"));
+const allowedImageTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/svg+xml",
+    "image/gif"
+];
+const allowedDocumentTypes = [
+    "application/pdf",
+    "image/jpg",
+    "image/png",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 function generateCMP_ID() {
     const tagNumber = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
     return tagNumber;
@@ -25,7 +41,7 @@ const sendMailApproval = (toEmail, password) => __awaiter(void 0, void 0, void 0
     const fromEmail = process.env.EMAIL_FROM;
     if (!fromEmail)
         throw new Error("EMAIL_FROM is not defined in environment variables");
-    const subject = 'Your Company Registration Approved';
+    const subject = "Your Company Registration Approved";
     const bodyHtml = `
     <html>
       <body>
@@ -44,12 +60,12 @@ const sendMailApproval = (toEmail, password) => __awaiter(void 0, void 0, void 0
         Message: {
             Body: {
                 Html: {
-                    Charset: 'UTF-8',
+                    Charset: "UTF-8",
                     Data: bodyHtml,
                 },
             },
             Subject: {
-                Charset: 'UTF-8',
+                Charset: "UTF-8",
                 Data: subject,
             },
         },

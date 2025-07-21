@@ -137,75 +137,92 @@ export class CompanyServices {
         }
     }
 
-    async updateCompanyDetails(id: number, data: any) {
-        try {
-            const userData = await prisma.user.findUnique({
-                where: {id: id},
-            });
-            if (!userData || userData.user_type !== "SUPER_ADMIN") {
-                throw new CustomError("USER not found or not a super admin", 404, "Not Found");
-            }
+async updateCompanyDetails(id: number, data: any) {
+    try {
+        const userData = await prisma.user.findUnique({
+            where: { id: id },
+        });
 
-            const companyData = await prisma.company.findUnique({
-                where: {
-                    id: data.id,
-                    isDeleted: false,
-                    status: "ACTIVE",
-                },
-            });
-            if (!companyData) {
-                throw new CustomError("Company not found", 404, "Not found");
-            }
-
-            const existingCompany = await prisma.company.findFirst({
-                where: {
-                    id: {not: data.id},
-                    OR: [{email: data.email}, {name: data.name}, {mobileNumber: data.mobileNumber}],
-                },
-            });
-            if (existingCompany) {
-                throw new CustomError(
-                    "Company with the provided email, name or mobile number already exists",
-                    409,
-                    "Conflict"
-                );
-            }
-            const hasPassword = bcrypt.hashSync(data.password, 10);
-            const updatedComapny = await prisma.company.update({
-                where: {
-                    id: companyData.id,
-                },
-                data: {
-                    name: data.name,
-                    email: data.email,
-                    address: data.address,
-                    image: data.image,
-                    password: hasPassword,
-                    mobileNumber: data.mobileNumber,
-                },
-            });
-            await prisma.user.updateMany({
-                where: {companyId: updatedComapny.id},
-                data: {
-                    name: updatedComapny.name,
-                    email: updatedComapny.email,
-                    password: updatedComapny.password,
-                },
-            });
-            return {
-                message: "Company details updated successfully",
-                company: {
-                    ...updatedComapny,
-                    id: updatedComapny.id.toString(),
-                },
-            };
-        } catch (error: any) {
-            console.log("error===================>>>", error);
-            throw error instanceof CustomError
-                ? error
-                : new CustomError("Failed to update company details", 500, error.message);
+        if (!userData || userData.user_type !== "SUPER_ADMIN") {
+            throw new CustomError("USER not found or not a super admin", 404, "Not Found");
         }
+
+        const companyData = await prisma.company.findUnique({
+            where: {
+                id: data.id,
+                isDeleted: false,
+                status: "ACTIVE",
+            },
+        });
+
+        if (!companyData) {
+            throw new CustomError("Company not found", 404, "Not found");
+        } 
+        const emailExists = await prisma.company.findFirst({
+            where: {
+                email: data.email,
+            },
+        });
+        if (emailExists) {
+            throw new CustomError("Email already in use. Please use a different email.", 409, "Conflict");
+        } 
+        const nameExists = await prisma.company.findFirst({
+            where: {
+                name: data.name,
+            },
+        });
+        if (nameExists) {
+            throw new CustomError("Company name already in use. Please use a different name.", 409, "Conflict");
+        } 
+        const mobileExists = await prisma.company.findFirst({
+            where: {
+                mobileNumber: data.mobileNumber,
+            },
+        });
+        if (mobileExists) {
+            throw new CustomError("Mobile number already in use. Please use a different number.", 409, "Conflict");
+        }
+
+        const hasPassword = bcrypt.hashSync(data.password, 10);
+
+        const updatedComapny = await prisma.company.update({
+            where: {
+                id: companyData.id,
+            },
+            data: {
+                name: data.name,
+                email: data.email,
+                address: data.address,
+                image: data.image,
+                password: hasPassword,
+                mobileNumber: data.mobileNumber,
+            },
+        });
+
+        await prisma.user.updateMany({
+            where: { companyId: updatedComapny.id },
+            data: {
+                name: updatedComapny.name,
+                email: updatedComapny.email,
+                password: updatedComapny.password,
+            },
+        });
+
+        return {
+            message: "Company details updated successfully",
+            company: {
+                ...updatedComapny,
+                id: updatedComapny.id.toString(),
+            },
+        };
+    } catch (error: any) {
+        console.log("error===================>>>", error);
+        throw error instanceof CustomError
+            ? error
+            : new CustomError("Failed to update company details", 500, error.message);
     }
+}
+
 
     async getCompanyallDetails(id: number, page: number, limit: number) {
         try {
@@ -297,7 +314,9 @@ export class CompanyServices {
                     isApproved: "APPROVED",
                 },
             });
-            // await sendMailApproval(companyData.email, companyData.password);
+            console.log("updatedCompany====================>>>>", updatedCompany);
+            //   const mail = await sendMailApproval(updatedCompany.email, updatedCompany.password);
+            // console.log("mail====================>>>>", mail);
             return {
                 message: "Company request approved successfully",
                 company: {

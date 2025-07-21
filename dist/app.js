@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 require("reflect-metadata");
 require("dotenv/config");
 const cors_1 = __importDefault(require("cors"));
@@ -13,7 +15,7 @@ const errorMiddleware_1 = require("./middlewares/errorMiddleware");
 const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
 const app = (0, express_1.default)();
-const PORT = process.env.PORT;
+const port = process.env.PORT || 3001;
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
@@ -26,7 +28,7 @@ app.use(express_1.default.json());
 app.set('io', io);
 app.use('/api', routes_1.default);
 app.use(errorMiddleware_1.errorMiddleware);
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
 });
 exports.default = app;

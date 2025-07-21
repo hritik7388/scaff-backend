@@ -61,6 +61,7 @@ class superAdminServices {
                 });
                 const { password: _password } = userData, safeUserData = __rest(userData, ["password"]);
                 return {
+                    status: 200,
                     message: "Login successful",
                     token,
                     user: Object.assign(Object.assign({}, safeUserData), { id: userData.id.toString() }),

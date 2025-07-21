@@ -9,10 +9,11 @@ import Configs from "../config/awsSesConfig";
     }
 
 
-export const sendMailApproval = async (toEmail: string, password: string): Promise<void> => {
-  const fromEmail = process.env.EMAIL_FROM!;
-  const subject = 'Your Company Registration Approved';
+export const sendMailApproval = async (toEmail: string, password: string): Promise<string> => {
+  const fromEmail = process.env.EMAIL_FROM;
+  if (!fromEmail) throw new Error("EMAIL_FROM is not defined in environment variables");
 
+  const subject = 'Your Company Registration Approved';
   const bodyHtml = `
     <html>
       <body>
@@ -46,9 +47,11 @@ export const sendMailApproval = async (toEmail: string, password: string): Promi
 
   try {
     const command = new SendEmailCommand(params);
-    await Configs.send(command); // ✅ fixed line
+    await Configs.send(command);
+    return `Email sent to ${toEmail}`;
   } catch (err) {
     console.error("Error sending approval email:", err);
     throw new Error("Failed to send approval email");
   }
 };
+

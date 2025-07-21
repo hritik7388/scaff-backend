@@ -43,6 +43,7 @@ export class superAdminServices {
             const {password: _password, ...safeUserData} = userData;
 
             return {
+                status:200,
                 message: "Login successful",
                 token,
                 user: {

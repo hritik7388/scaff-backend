@@ -23,6 +23,8 @@ function generateCMP_ID() {
 }
 const sendMailApproval = (toEmail, password) => __awaiter(void 0, void 0, void 0, function* () {
     const fromEmail = process.env.EMAIL_FROM;
+    if (!fromEmail)
+        throw new Error("EMAIL_FROM is not defined in environment variables");
     const subject = 'Your Company Registration Approved';
     const bodyHtml = `
     <html>
@@ -55,7 +57,8 @@ const sendMailApproval = (toEmail, password) => __awaiter(void 0, void 0, void 0
     };
     try {
         const command = new client_ses_1.SendEmailCommand(params);
-        yield awsSesConfig_1.default.send(command); // ✅ fixed line
+        yield awsSesConfig_1.default.send(command);
+        return `Email sent to ${toEmail}`;
     }
     catch (err) {
         console.error("Error sending approval email:", err);

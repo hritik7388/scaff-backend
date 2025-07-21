@@ -160,14 +160,29 @@ class CompanyServices {
                 if (!companyData) {
                     throw new customError_1.CustomError("Company not found", 404, "Not found");
                 }
-                const existingCompany = yield prismaClient_1.default.company.findFirst({
+                const emailExists = yield prismaClient_1.default.company.findFirst({
                     where: {
-                        id: { not: data.id },
-                        OR: [{ email: data.email }, { name: data.name }, { mobileNumber: data.mobileNumber }],
+                        email: data.email,
                     },
                 });
-                if (existingCompany) {
-                    throw new customError_1.CustomError("Company with the provided email, name or mobile number already exists", 409, "Conflict");
+                if (emailExists) {
+                    throw new customError_1.CustomError("Email already in use. Please use a different email.", 409, "Conflict");
+                }
+                const nameExists = yield prismaClient_1.default.company.findFirst({
+                    where: {
+                        name: data.name,
+                    },
+                });
+                if (nameExists) {
+                    throw new customError_1.CustomError("Company name already in use. Please use a different name.", 409, "Conflict");
+                }
+                const mobileExists = yield prismaClient_1.default.company.findFirst({
+                    where: {
+                        mobileNumber: data.mobileNumber,
+                    },
+                });
+                if (mobileExists) {
+                    throw new customError_1.CustomError("Mobile number already in use. Please use a different number.", 409, "Conflict");
                 }
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const updatedComapny = yield prismaClient_1.default.company.update({
@@ -287,7 +302,9 @@ class CompanyServices {
                         isApproved: "APPROVED",
                     },
                 });
-                // await sendMailApproval(companyData.email, companyData.password);
+                console.log("updatedCompany====================>>>>", updatedCompany);
+                //   const mail = await sendMailApproval(updatedCompany.email, updatedCompany.password);
+                // console.log("mail====================>>>>", mail);
                 return {
                     message: "Company request approved successfully",
                     company: Object.assign(Object.assign(Object.assign({}, companyData), updatedCompany), { id: companyData.id.toString() }),

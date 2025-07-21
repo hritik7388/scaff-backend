@@ -1,4 +1,6 @@
 import express from 'express';
+import dotenv from "dotenv";
+dotenv.config();
 import 'reflect-metadata';
 import 'dotenv/config';
 import cors from 'cors';
@@ -8,7 +10,7 @@ import { errorMiddleware } from './middlewares/errorMiddleware';
 import { Server } from 'socket.io';
 import http from 'http';
 const app = express();
-const PORT = process.env.PORT ;
+const port = process.env.PORT || 3001;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -25,8 +27,8 @@ app.use('/api', routes);
 
 app.use(errorMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
 
 

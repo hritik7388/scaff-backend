@@ -10,7 +10,7 @@ export function errorMiddleware(err: any, req: Request, res: Response, next: Nex
       res.status(400).json({
         success: false,
         message: 'Validation error',
-        errors: err.errors, 
+        //errors: err.errors, 
       });
       return;
   }

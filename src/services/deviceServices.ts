@@ -31,8 +31,7 @@ export class DeviceServices {
                 userId: user.id,
                 deviceToken: data.deviceToken,
                 deviceType: data.deviceType,
-                deviceName: data.deviceName,
-                deviceVersion: data.deviceVersion,
+                deviceName: data.deviceName, 
                 appVersion: data.appVersion,
                 osVersion: data.osVersion,
                 user_type: user.user_type,
@@ -54,6 +53,7 @@ export class DeviceServices {
                 });
             }
             return {
+                 message: "Device token updated successfully",
                 data:{
                 ...device,
                 id: device.id.toString(),

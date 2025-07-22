@@ -6,7 +6,6 @@ exports.deviceSchema = zod_1.z.object({
     deviceToken: zod_1.z.string().min(1, 'Device token is required'),
     deviceType: zod_1.z.enum(['ios', 'android', 'web']), // Customize based on your allowed values
     deviceName: zod_1.z.string().optional(),
-    deviceVersion: zod_1.z.string().optional(),
     appVersion: zod_1.z.string().optional(),
     osVersion: zod_1.z.string().optional(),
 });

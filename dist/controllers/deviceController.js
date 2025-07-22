@@ -14,7 +14,7 @@ const deviceTokenSchema_1 = require("../schemas/deviceTokenSchema");
 const deviceServices_1 = require("../services/deviceServices");
 const deviceServicesController = new deviceServices_1.DeviceServices();
 class DeviceController {
-    updateDevice(req, res) {
+    updateDevice(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { id, user_type } = req.user;
@@ -23,7 +23,7 @@ class DeviceController {
                 res.status(200).json(user);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }

@@ -5,31 +5,31 @@ import { superAdminSchema } from "../schemas/superAdminSchema";
 import { AuthenticatedRequest } from "../types/index";
 const superAdmin = new superAdminServices();
 export class superAdminController {
-  async superAdminLogin(req: Request, res: Response) {
+  async superAdminLogin(req: Request, res: Response , next: Function) {
     try {
       const data = superAdminSchema.parse(req.body);
       const user = await superAdmin.loginSuperAdminServices(data);
       res.status(200).json(user);
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+     next(err);
     }
   }
-  async dashboardData(req: AuthenticatedRequest, res: Response) {
+  async dashboardData(req: AuthenticatedRequest, res: Response, next: Function) {
     try {
       const id = String(req.user?.id!);
       const data = await superAdmin.adminDashboard(id);
       res.status(200).json(data);
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+      next(err);
     }
   }
  
-  async awsCredentials(req: Request, res: Response) {
+  async awsCredentials(req: Request, res: Response, next: Function) {
     try {
       const data = await superAdmin.awsCredentials(); // This is the service method
       res.status(200).json(data);
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+     next(err);
     }
   }
 }

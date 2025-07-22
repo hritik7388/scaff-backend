@@ -8,7 +8,7 @@ const deviceServicesController= new DeviceServices();
 
 export class  DeviceController{
 
-async updateDevice(req: AuthenticatedRequest, res: Response) {
+async updateDevice(req: AuthenticatedRequest, res: Response, next: Function) {
     try {
         const { id, user_type } = req.user!;
         const data = deviceSchema.parse(req.body);
@@ -17,7 +17,7 @@ async updateDevice(req: AuthenticatedRequest, res: Response) {
 
         res.status(200).json(user);
     } catch (err) {
-        res.status(400).json({ error: (err as Error).message });
+        next(err);
     }
 }
 }

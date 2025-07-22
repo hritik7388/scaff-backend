@@ -10,7 +10,7 @@ const deviceControllers=new DeviceController();
  * @desc    Upadte a existing  device
  * @access  Public
  */
-router.put("/updateDevice", authMiddleware, deviceControllers.updateDevice.bind(deviceControllers));
+router.post("/updateDevice", authMiddleware, deviceControllers.updateDevice.bind(deviceControllers));
 
 
 

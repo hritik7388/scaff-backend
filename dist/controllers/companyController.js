@@ -14,7 +14,7 @@ const companySchema_1 = require("../schemas/companySchema");
 const comapnyServices_1 = require("../services/comapnyServices");
 const companyServiceController = new comapnyServices_1.CompanyServices();
 class CompanyControllers {
-    registerCompany(req, res) {
+    registerCompany(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const data = companySchema_1.companyRegisterSchema.parse(req.body);
@@ -22,11 +22,11 @@ class CompanyControllers {
                 res.status(201).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    companyLogin(req, res) {
+    companyLogin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const data = companySchema_1.compnayLoginSchema.parse(req.body);
@@ -34,11 +34,11 @@ class CompanyControllers {
                 res.status(200).json(user);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    updatedCompanyDetails(req, res) {
+    updatedCompanyDetails(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -48,11 +48,11 @@ class CompanyControllers {
                 res.status(200).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    getAllCompnay(req, res) {
+    getAllCompnay(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -63,11 +63,11 @@ class CompanyControllers {
                 res.status(200).json(companies);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    getCompanyById(req, res) {
+    getCompanyById(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -77,11 +77,11 @@ class CompanyControllers {
                 res.status(200).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    approveCompanyrequest(req, res) {
+    approveCompanyrequest(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -91,11 +91,11 @@ class CompanyControllers {
                 res.status(200).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    rejectCompanyrequest(req, res) {
+    rejectCompanyrequest(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -105,11 +105,11 @@ class CompanyControllers {
                 res.status(200).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    searchCompany(req, res) {
+    searchCompany(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -121,11 +121,11 @@ class CompanyControllers {
                 res.status(200).json(searchData);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    addNewCompanyBySuperAdmin(req, res) {
+    addNewCompanyBySuperAdmin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -135,11 +135,11 @@ class CompanyControllers {
                 res.status(201).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    blockCompanyBySuperAdmin(req, res) {
+    blockCompanyBySuperAdmin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -149,11 +149,11 @@ class CompanyControllers {
                 res.status(201).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    unblockCompanyBySuperAdmin(req, res) {
+    unblockCompanyBySuperAdmin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -163,11 +163,11 @@ class CompanyControllers {
                 res.status(201).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    deleteCompanyBySuperAdmin(req, res) {
+    deleteCompanyBySuperAdmin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -177,7 +177,7 @@ class CompanyControllers {
                 res.status(201).json(company);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }

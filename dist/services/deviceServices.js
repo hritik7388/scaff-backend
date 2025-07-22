@@ -46,7 +46,6 @@ class DeviceServices {
                     deviceToken: data.deviceToken,
                     deviceType: data.deviceType,
                     deviceName: data.deviceName,
-                    deviceVersion: data.deviceVersion,
                     appVersion: data.appVersion,
                     osVersion: data.osVersion,
                     user_type: user.user_type,
@@ -69,6 +68,7 @@ class DeviceServices {
                     });
                 }
                 return {
+                    message: "Device token updated successfully",
                     data: Object.assign(Object.assign({}, device), { id: device.id.toString(), userId: device.userId.toString() })
                 };
             }

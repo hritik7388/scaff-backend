@@ -14,7 +14,7 @@ const superAdminServices_1 = require("../services/superAdminServices");
 const superAdminSchema_1 = require("../schemas/superAdminSchema");
 const superAdmin = new superAdminServices_1.superAdminServices();
 class superAdminController {
-    superAdminLogin(req, res) {
+    superAdminLogin(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const data = superAdminSchema_1.superAdminSchema.parse(req.body);
@@ -22,11 +22,11 @@ class superAdminController {
                 res.status(200).json(user);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    dashboardData(req, res) {
+    dashboardData(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -35,18 +35,18 @@ class superAdminController {
                 res.status(200).json(data);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }
-    awsCredentials(req, res) {
+    awsCredentials(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const data = yield superAdmin.awsCredentials(); // This is the service method
                 res.status(200).json(data);
             }
             catch (err) {
-                res.status(400).json({ error: err.message });
+                next(err);
             }
         });
     }

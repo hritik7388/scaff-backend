@@ -90,8 +90,7 @@ model Device {
   user_type     String?
   deviceToken   String?
   deviceType    String?
-  deviceName    String?
-  deviceVersion String?
+  deviceName    String? 
   appVersion    String?
   osVersion     String?
   lastLogin     DateTime?

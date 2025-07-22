@@ -10,7 +10,7 @@ function errorMiddleware(err, req, res, next) {
         res.status(400).json({
             success: false,
             message: 'Validation error',
-            errors: err.errors,
+            //errors: err.errors, 
         });
         return;
     }

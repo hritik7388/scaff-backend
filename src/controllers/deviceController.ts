@@ -1,23 +1,22 @@
 import {Response} from "express";
 import {Request} from "express";
-import { AuthenticatedRequest } from "../types/index";
-import {deviceSchema} from '../schemas/deviceTokenSchema'
-import { DeviceServices } from "../services/deviceServices";
+import {AuthenticatedRequest} from "../types/index";
+import {deviceSchema} from "../schemas/deviceTokenSchema";
+import {DeviceServices} from "../services/deviceServices";
 
-const deviceServicesController= new DeviceServices();
+const deviceServicesController = new DeviceServices();
 
-export class  DeviceController{
+export class DeviceController {
+    async updateDevice(req: AuthenticatedRequest, res: Response, next: Function) {
+        try {
+            const {id, user_type} = req.user!;
+            const data = deviceSchema.parse(req.body);
 
-async updateDevice(req: AuthenticatedRequest, res: Response, next: Function) {
-    try {
-        const { id, user_type } = req.user!;
-        const data = deviceSchema.parse(req.body);
+            const user = await deviceServicesController.updateDeviceToken(Number(id), {...data, user_type});
 
-        const user = await deviceServicesController.updateDeviceToken(Number(id), { ...data, user_type });
-
-        res.status(200).json(user);
-    } catch (err) {
-        next(err);
+            res.status(200).json(user);
+        } catch (err) {
+            next;
+        }
     }
-}
 }

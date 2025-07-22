@@ -1,14 +1,16 @@
 import {SendEmailCommand} from "@aws-sdk/client-ses";
 
 import Configs from "../config/awsSesConfig";
+import {GetObjectCommand, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
+import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 const allowedImageTypes = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/svg+xml",
-  "image/gif"
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/svg+xml",
+    "image/gif",
 ];
 const allowedDocumentTypes = [
     "application/pdf",
@@ -18,12 +20,13 @@ const allowedDocumentTypes = [
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
- 
-
-export function generateCMP_ID() {
-    const tagNumber = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-    return tagNumber;
-}
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+});
 
 export const sendMailApproval = async (toEmail: string, password: string): Promise<string> => {
     const fromEmail = process.env.EMAIL_FROM;
@@ -71,3 +74,55 @@ export const sendMailApproval = async (toEmail: string, password: string): Promi
     }
 };
 
+export const generatePresignedUrl = async (filename: string, contentType: string) => {
+    const timestamp = Date.now();
+    const sanitizedFilename = filename.replace(/\s+/g, "_");
+
+    let folder = "";
+
+    if (allowedImageTypes.includes(contentType)) {
+        folder = "profile_image";
+    } else if (allowedDocumentTypes.includes(contentType)) {
+        folder = "user_verification_docs";
+    } else {
+        throw new Error("Unsupported file type");
+    }
+
+    const key = `users/${folder}/${timestamp}-${sanitizedFilename}`;
+
+    const putObjectCommand = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET!,
+        Key: key,
+        ContentType: contentType,
+    });
+
+    try {
+        const url = await getSignedUrl(s3Client, putObjectCommand, {
+            expiresIn: 3600,
+        });
+
+        return {
+            url,
+            key,
+        };
+    } catch (error) {
+        console.error("Error generating presigned URL:", error);
+        throw new Error("Failed to generate upload URL");
+    }
+};
+
+export const generateReadUrl = async (key: string): Promise<string> => {
+    try {
+        const command = new GetObjectCommand({
+            Bucket: process.env.AWS_BUCKET!,
+            Key: key,
+        });
+        const url = await getSignedUrl(s3Client, command, {
+            expiresIn: 3600,
+        });
+        return url;
+    } catch (error) {
+        console.error("Error generating read URL:", error);
+        throw new Error("Failed to generateReadUrl");
+    }
+};

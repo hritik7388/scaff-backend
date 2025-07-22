@@ -22,7 +22,7 @@ export class CompanyControllers {
             const company = await companyServiceController.registerCompany(data);
             res.status(201).json(company);
         } catch (err) {
-           next(err);
+            next(err);
         }
     }
     async companyLogin(req: Request, res: Response, next: Function) {
@@ -53,7 +53,7 @@ export class CompanyControllers {
             const companies = await companyServiceController.getCompanyallDetails(id, page, limit);
             res.status(200).json(companies);
         } catch (err) {
-             next(err);
+            next(err);
         }
     }
 
@@ -64,7 +64,7 @@ export class CompanyControllers {
             const company = await companyServiceController.getCompanyById(id, data);
             res.status(200).json(company);
         } catch (err) {
-           next(err);
+            next(err);
         }
     }
 
@@ -76,7 +76,7 @@ export class CompanyControllers {
 
             res.status(200).json(company);
         } catch (err) {
-           next(err);
+            next(err);
         }
     }
 
@@ -123,7 +123,7 @@ export class CompanyControllers {
             const company = await companyServiceController.blockCompany(id, data);
             res.status(201).json(company);
         } catch (err) {
-             next(err);
+            next(err);
         }
     }
 
@@ -138,7 +138,7 @@ export class CompanyControllers {
         }
     }
 
-    async deleteCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response,next: Function) {
+    async deleteCompanyBySuperAdmin(req: AuthenticatedRequest, res: Response, next: Function) {
         try {
             const id = Number(req.user?.id!);
             const data = companyStatus.parse(req.body);

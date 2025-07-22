@@ -23,7 +23,7 @@ class DeviceController {
                 res.status(200).json(user);
             }
             catch (err) {
-                next(err);
+                next;
             }
         });
     }

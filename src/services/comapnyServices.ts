@@ -1,6 +1,6 @@
 import prisma from "../config/prismaClient";
 import {CustomError} from "../types/customError";
-import { sendMailApproval} from "../helpers/utils";
+import {sendMailApproval} from "../helpers/utils";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import {v4 as uuidv4} from "uuid";
@@ -22,57 +22,57 @@ export class CompanyServices {
             if (data.password !== data.password) {
                 throw new CustomError("Password  do not match", 400, "Password mismatch");
             }
-            const hasPassword = bcrypt.hashSync(data.password, 10);  
- const newCompany = await prisma.company.create({
-  data: {
-    uuid: uuidv4(),
-    name: data.name,
-    email: data.email,
-    address: data.address,
-    image: data.image,
-    password: hasPassword,
-    mobileNumber: data.mobileNumber,
-    countryCode: data.countryCode, // ✅ This now works after generate
-    isApproved: "PENDING",
-    user_type: "COMPANY",
-    latitude: data.latitude,
-    longitude: data.longitude,
-  },
-});
+            const hasPassword = bcrypt.hashSync(data.password, 10);
+
+            const newCompany = await prisma.company.create({
+                data: {
+                    uuid: uuidv4(),
+                    name: data.name,
+                    email: data.email,
+                    address: data.address,
+                    image: data.image,
+                    password: hasPassword,
+                    mobileNumber: data.mobileNumber,
+                    countryCode: data.countryCode, // ✅ This now works after generate
+                    isApproved: "PENDING",
+                    user_type: "COMPANY",
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                },
+            });
             const existingUser = await prisma.user.findUnique({
                 where: {email: data.email},
             });
-const newUser = await prisma.user.create({
-  data: {
-    uuid: newCompany.uuid,
-    name: data.name,
-    email: data.email,
-    password: newCompany.password,
-    user_type: "COMPANY",
-    lastLogin: newCompany.lastLogin,
-    mobileNumber: newCompany.mobileNumber,
-    countryCode: newCompany.countryCode, // ✅ Fixed
-    address: data.address,
-    companyId: newCompany.id,
-  },
-});
+            const newUser = await prisma.user.create({
+                data: {
+                    uuid: newCompany.uuid,
+                    name: data.name,
+                    email: data.email,
+                    password: newCompany.password,
+                    user_type: "COMPANY",
+                    lastLogin: newCompany.lastLogin,
+                    mobileNumber: newCompany.mobileNumber,
+                    countryCode: newCompany.countryCode, // ✅ Fixed
+                    address: data.address,
+                    companyId: newCompany.id,
+                },
+            });
 
             if (existingUser) {
                 throw new CustomError("User with the provided email already exists", 400, "User already exists");
             }
-              const jwtPayload = {
-            login_id: newCompany.email,
-            id: newCompany.id.toString(),
-            uuid: newCompany.uuid,
-            user_type: newCompany.user_type,
-            mobileNumber: newCompany.mobileNumber,
-            countryCode: newCompany.countryCode,
-        };
+            const jwtPayload = {
+                login_id: newCompany.email,
+                id: newCompany.id.toString(),
+                uuid: newCompany.uuid,
+                user_type: newCompany.user_type,
+                mobileNumber: newCompany.mobileNumber,
+                countryCode: newCompany.countryCode,
+            };
 
-        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
-            expiresIn: "30d",
-        });
-
+            const token = jwt.sign(jwtPayload, process.env.JWT_SECRET!, {
+                expiresIn: "30d",
+            });
 
             return {
                 message: "Company registered successfully",
@@ -155,95 +155,94 @@ const newUser = await prisma.user.create({
         }
     }
 
-async updateCompanyDetails(id: number, data: any) {
-    try {
-        const userData = await prisma.user.findUnique({
-            where: { id: id },
-        });
+    async updateCompanyDetails(id: number, data: any) {
+        try {
+            const userData = await prisma.user.findUnique({
+                where: {id: id},
+            });
 
-        if (!userData || userData.user_type !== "SUPER_ADMIN") {
-            throw new CustomError("USER not found or not a super admin", 404, "Not Found");
+            if (!userData || userData.user_type !== "SUPER_ADMIN") {
+                throw new CustomError("USER not found or not a super admin", 404, "Not Found");
+            }
+
+            const companyData = await prisma.company.findUnique({
+                where: {
+                    id: data.id,
+                    isDeleted: false,
+                    status: "ACTIVE",
+                },
+            });
+
+            if (!companyData) {
+                throw new CustomError("Company not found", 404, "Not found");
+            }
+            const emailExists = await prisma.company.findFirst({
+                where: {
+                    email: data.email,
+                },
+            });
+            if (emailExists) {
+                throw new CustomError("Email already in use. Please use a different email.", 409, "Conflict");
+            }
+            const nameExists = await prisma.company.findFirst({
+                where: {
+                    name: data.name,
+                },
+            });
+            if (nameExists) {
+                throw new CustomError("Company name already in use. Please use a different name.", 409, "Conflict");
+            }
+            const mobileExists = await prisma.company.findFirst({
+                where: {
+                    mobileNumber: data.mobileNumber,
+                },
+            });
+            if (mobileExists) {
+                throw new CustomError("Mobile number already in use. Please use a different number.", 409, "Conflict");
+            }
+
+            const hasPassword = bcrypt.hashSync(data.password, 10);
+
+            const updatedComapny = await prisma.company.update({
+                where: {
+                    id: companyData.id,
+                },
+                data: {
+                    name: data.name,
+                    email: data.email,
+                    address: data.address,
+                    image: data.image,
+                    password: hasPassword,
+                    mobileNumber: data.mobileNumber,
+                    countryCode: data.countryCode, // ✅ Will not throw error now
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                },
+            });
+
+            await prisma.user.updateMany({
+                where: {companyId: updatedComapny.id},
+                data: {
+                    name: updatedComapny.name,
+                    email: updatedComapny.email,
+                    password: updatedComapny.password,
+                },
+            });
+
+            return {
+                message: "Company details updated successfully",
+                data: {
+                    ...updatedComapny,
+                    id: updatedComapny.id.toString(),
+                },
+            };
+        } catch (error: any) {
+            console.log("error===================>>>", error);
+            throw error instanceof CustomError
+                ? error
+                : new CustomError("Failed to update company details", 500, error.message);
         }
-
-        const companyData = await prisma.company.findUnique({
-            where: {
-                id: data.id,
-                isDeleted: false,
-                status: "ACTIVE",
-            },
-        });
-
-        if (!companyData) {
-            throw new CustomError("Company not found", 404, "Not found");
-        } 
-        const emailExists = await prisma.company.findFirst({
-            where: {
-                email: data.email,
-            },
-        });
-        if (emailExists) {
-            throw new CustomError("Email already in use. Please use a different email.", 409, "Conflict");
-        } 
-        const nameExists = await prisma.company.findFirst({
-            where: {
-                name: data.name,
-            },
-        });
-        if (nameExists) {
-            throw new CustomError("Company name already in use. Please use a different name.", 409, "Conflict");
-        } 
-        const mobileExists = await prisma.company.findFirst({
-            where: {
-                mobileNumber: data.mobileNumber,
-            },
-        });
-        if (mobileExists) {
-            throw new CustomError("Mobile number already in use. Please use a different number.", 409, "Conflict");
-        }
-
-        const hasPassword = bcrypt.hashSync(data.password, 10);
-
-        const updatedComapny = await prisma.company.update({
-            where: {
-                id: companyData.id,
-            },
-            data: {
-               name: data.name,
-    email: data.email,
-    address: data.address,
-    image: data.image,
-    password: hasPassword,
-    mobileNumber: data.mobileNumber,
-    countryCode: data.countryCode, // ✅ Will not throw error now
-    latitude: data.latitude,
-    longitude: data.longitude,
-            },
-        });
-
-        await prisma.user.updateMany({
-            where: { companyId: updatedComapny.id },
-            data: {
-                name: updatedComapny.name,
-                email: updatedComapny.email,
-                password: updatedComapny.password,
-            },
-        });
-
-        return {
-            message: "Company details updated successfully",
-            data: {
-                ...updatedComapny,
-                id: updatedComapny.id.toString(),
-            },
-        };
-    } catch (error: any) {
-        console.log("error===================>>>", error);
-        throw error instanceof CustomError
-            ? error
-            : new CustomError("Failed to update company details", 500, error.message);
     }
-}
-
 
     async getCompanyallDetails(id: number, page: number, limit: number) {
         try {
@@ -490,7 +489,7 @@ async updateCompanyDetails(id: number, data: any) {
                     email: data.email,
                     address: data.address,
                     image: data.image,
-                    password: hasPassword, 
+                    password: hasPassword,
                     mobileNumber: data.mobileNumber,
                     countryCode: data.countryCode,
                     isApproved: "APPROVED",
@@ -511,7 +510,7 @@ async updateCompanyDetails(id: number, data: any) {
                     user_type: "COMPANY",
                     companyId: newCompany.id,
                     lastLogin: newCompany.lastLogin,
-                    mobileNumber: newCompany.mobileNumber, 
+                    mobileNumber: newCompany.mobileNumber,
                     countryCode: data.countryCode, // Add countryCode here
                 },
             });

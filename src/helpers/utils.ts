@@ -1,32 +1,14 @@
-import {SendEmailCommand} from "@aws-sdk/client-ses";
+import {SendEmailCommand} from "@aws-sdk/client-ses";;
+const fs = require("fs"); 
+import Configs from "../config/awsSesConfig"; 
+import admin from "firebase-admin";
+import firebaseAdminConfig from "../config/firebaseAdminConfig"; // ✅ NEW
 
-import Configs from "../config/awsSesConfig";
-import {GetObjectCommand, PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
-const allowedImageTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/heic",
-    "image/svg+xml",
-    "image/gif",
-];
-const allowedDocumentTypes = [
-    "application/pdf",
-    "image/jpg",
-    "image/png",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    },
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseAdminConfig as admin.ServiceAccount),
+  });
+}
 
 export const sendMailApproval = async (toEmail: string, password: string): Promise<string> => {
     const fromEmail = process.env.EMAIL_FROM;
@@ -73,56 +55,30 @@ export const sendMailApproval = async (toEmail: string, password: string): Promi
         throw new Error("Failed to send approval email");
     }
 };
+ 
 
-export const generatePresignedUrl = async (filename: string, contentType: string) => {
-    const timestamp = Date.now();
-    const sanitizedFilename = filename.replace(/\s+/g, "_");
-
-    let folder = "";
-
-    if (allowedImageTypes.includes(contentType)) {
-        folder = "profile_image";
-    } else if (allowedDocumentTypes.includes(contentType)) {
-        folder = "user_verification_docs";
-    } else {
-        throw new Error("Unsupported file type");
-    }
-
-    const key = `users/${folder}/${timestamp}-${sanitizedFilename}`;
-
-    const putObjectCommand = new PutObjectCommand({
-        Bucket: process.env.AWS_BUCKET!,
-        Key: key,
-        ContentType: contentType,
-    });
+export const pushNotificationDelhi=async (deviceToken: any, title: any, body: any) => {
+    const message = {
+      token: deviceToken,
+      notification: {
+        title,
+        body,
+      },
+      data: {
+        title,
+        body,
+      },
+    };
 
     try {
-        const url = await getSignedUrl(s3Client, putObjectCommand, {
-            expiresIn: 3600,
-        });
-
-        return {
-            url,
-            key,
-        };
+      console.log("Push Notification - Message:", message);
+      const response = await admin.messaging().send(message);
+      console.log("✅ FCM Response:", response);
+      return response;
     } catch (error) {
-        console.error("Error generating presigned URL:", error);
-        throw new Error("Failed to generate upload URL");
+      console.error("❌ FCM Error:", error);
+      throw error;
     }
-};
+}
 
-export const generateReadUrl = async (key: string): Promise<string> => {
-    try {
-        const command = new GetObjectCommand({
-            Bucket: process.env.AWS_BUCKET!,
-            Key: key,
-        });
-        const url = await getSignedUrl(s3Client, command, {
-            expiresIn: 3600,
-        });
-        return url;
-    } catch (error) {
-        console.error("Error generating read URL:", error);
-        throw new Error("Failed to generateReadUrl");
-    }
-};
+ 

@@ -19,12 +19,14 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     const token = authHeader.substring(7);
     try {
       const decoded = (jwt.verify(token, process.env.JWT_SECRET!)) as TokenPayload;
+      console.log("Decoded token:", decoded);
       req.user = {
         user_id: decoded.user_id as number,
         user_uuid: decoded.user_uuid as string,
         id: decoded.id as number,
         user_type: (decoded as any).user_type as string // Ensure user_type is present in the token payload
       };
+      console.log("Authenticated user:", req.user);
       next();
     } catch(error) {
       res.status(401).json({ message: 'Invalid or expired token' });

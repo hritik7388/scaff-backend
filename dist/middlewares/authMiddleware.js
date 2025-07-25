@@ -11,12 +11,14 @@ const authMiddleware = (req, res, next) => {
         const token = authHeader.substring(7);
         try {
             const decoded = (jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET));
+            console.log("Decoded token:", decoded);
             req.user = {
                 user_id: decoded.user_id,
                 user_uuid: decoded.user_uuid,
                 id: decoded.id,
                 user_type: decoded.user_type // Ensure user_type is present in the token payload
             };
+            console.log("Authenticated user:", req.user);
             next();
         }
         catch (error) {

@@ -43,9 +43,9 @@ class superAdminServices {
                 if (!isPasswordValid) {
                     throw new customError_1.CustomError("Invalid password", 401, "Invalid password");
                 }
-                if (userData.user_type !== "SUPER_ADMIN") {
-                    throw new customError_1.CustomError("Unauthorized", 401, "Unauthorized");
-                }
+                // if (userData.user_type !== "SUPER_ADMIN") {
+                //     throw new CustomError("Unauthorized", 401, "Unauthorized");
+                // }
                 const jwtPayload = {
                     login_id: userData.email,
                     id: userData.id.toString(),

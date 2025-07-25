@@ -19,14 +19,14 @@ const port = process.env.PORT || 3001;
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: '*',
+        origin: "*",
     },
 });
 app.use((0, cors_1.default)());
-app.use((0, morgan_1.default)('dev'));
+app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json());
-app.set('io', io);
-app.use('/api', routes_1.default);
+app.set("io", io);
+app.use("/api", routes_1.default);
 app.use(errorMiddleware_1.errorMiddleware);
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

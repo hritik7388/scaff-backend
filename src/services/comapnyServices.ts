@@ -40,27 +40,7 @@ export class CompanyServices {
                     longitude: data.longitude,
                 },
             });
-            const existingUser = await prisma.user.findUnique({
-                where: {email: data.email},
-            });
-            const newUser = await prisma.user.create({
-                data: {
-                    uuid: newCompany.uuid,
-                    name: data.name,
-                    email: data.email,
-                    password: newCompany.password,
-                    user_type: "COMPANY",
-                    lastLogin: newCompany.lastLogin,
-                    mobileNumber: newCompany.mobileNumber,
-                    countryCode: newCompany.countryCode, // ✅ Fixed
-                    address: data.address,
-                    companyId: newCompany.id,
-                },
-            });
-
-            if (existingUser) {
-                throw new CustomError("User with the provided email already exists", 400, "User already exists");
-            }
+            
             const jwtPayload = {
                 login_id: newCompany.email,
                 id: newCompany.id.toString(),

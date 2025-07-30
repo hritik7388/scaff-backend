@@ -18,7 +18,7 @@ export class DeviceServices {
                     where: {
                         id: id,
                         status: "ACTIVE",
-                        // user_type: data.user_type, // Only include this if it exists in your schema
+                        user_type: data.user_type, // Only include this if it exists in your schema
                     },
                 });
 

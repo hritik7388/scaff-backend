@@ -413,12 +413,6 @@ class CompanyServices {
     addNewCompany(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const userData = yield prismaClient_1.default.user.findUnique({
-                    where: { id: id },
-                });
-                if (!userData || userData.user_type !== "SUPER_ADMIN") {
-                    throw new customError_1.CustomError("USER not found or not a super admin", 404, "Not Found");
-                }
                 const companyData = yield prismaClient_1.default.company.findUnique({
                     where: {
                         email: data.email,
@@ -429,8 +423,8 @@ class CompanyServices {
                 if (companyData) {
                     throw new customError_1.CustomError("Company with the provided email already exists", 400, "Company already exists");
                 }
-                if (data.password !== data.confirmPassword) {
-                    throw new customError_1.CustomError("Password and confirm password do not match", 400, "Password mismatch");
+                if (data.password !== data.password) {
+                    throw new customError_1.CustomError("Password  do not match", 400, "Password mismatch");
                 }
                 const hasPassword = bcryptjs_1.default.hashSync(data.password, 10);
                 const newCompany = yield prismaClient_1.default.company.create({
@@ -442,33 +436,27 @@ class CompanyServices {
                         image: data.image,
                         password: hasPassword,
                         mobileNumber: data.mobileNumber,
-                        countryCode: data.countryCode,
-                        isApproved: "APPROVED",
+                        countryCode: data.countryCode, // ✅ This now works after generate
+                        isApproved: "PENDING",
                         user_type: "COMPANY",
+                        latitude: data.latitude,
+                        longitude: data.longitude,
                     },
                 });
-                // Add this check
-                const existingUser = yield prismaClient_1.default.user.findUnique({
-                    where: { email: data.email },
+                const jwtPayload = {
+                    login_id: newCompany.email,
+                    id: newCompany.id.toString(),
+                    uuid: newCompany.uuid,
+                    user_type: newCompany.user_type,
+                    mobileNumber: newCompany.mobileNumber,
+                    countryCode: newCompany.countryCode,
+                };
+                const token = jsonwebtoken_1.default.sign(jwtPayload, process.env.JWT_SECRET, {
+                    expiresIn: "30d",
                 });
-                const newUser = yield prismaClient_1.default.user.create({
-                    data: {
-                        uuid: newCompany.uuid,
-                        name: data.name,
-                        email: data.email,
-                        password: newCompany.password,
-                        user_type: "COMPANY",
-                        companyId: newCompany.id,
-                        lastLogin: newCompany.lastLogin,
-                        mobileNumber: newCompany.mobileNumber,
-                        countryCode: data.countryCode, // Add countryCode here
-                    },
-                });
-                if (existingUser) {
-                    throw new customError_1.CustomError("User with the provided email already exists", 400, "User already exists");
-                }
                 return {
                     message: "Company registered successfully",
+                    token,
                     data: Object.assign(Object.assign({}, newCompany), { id: newCompany.id.toString() }),
                 };
             }
